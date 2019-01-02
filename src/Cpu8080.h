@@ -43,7 +43,10 @@ private:
 	uint16_t m_sp;
 
 	/* Registers */
-	uint8_t m_regB;
+	uint8_t m_regA; uint8_t m_regPSW;
+	uint8_t m_regB; uint8_t m_regC;   // called 'B' as a 16 bit pair
+	uint8_t m_regD; uint8_t m_regE;   // called 'D' as a 16 bit pair
+	uint8_t m_regH; uint8_t m_regL;   // called 'H' as a 16 bit pair
 
 	/* Memory */
 	uint8_t m_memory[ROM_SIZE + RAM_SIZE + VRAM_SIZE];
@@ -77,6 +80,7 @@ private:
 //****************** Memory Operations *********************//
 //////////////////////////////////////////////////////////////
 	int op_lxi_sp(void);
+	int op_lxi_d (void);
 	int op_mvi_b (void);
 };
 

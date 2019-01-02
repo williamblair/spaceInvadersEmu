@@ -31,6 +31,7 @@ void Cpu8080::run_next_op(void)
 	{
 		case 0x00: 	num_increment = 1;           break; // NOP
 		case 0x06:	num_increment = op_mvi_b();  break; // MVI B, D8
+		case 0x11:	num_increment = op_lxi_d();  break; // LXI D, D16
 
 		case 0x31:	num_increment = op_lxi_sp(); break; // LXI SP, D16
 
@@ -43,7 +44,7 @@ void Cpu8080::run_next_op(void)
 
 	m_pc += num_increment;
 
-	//printf("PC: 0x%04X\n", m_pc);
+	printf("PC: 0x%04X\n", m_pc);
 
 	return;
 }
@@ -94,6 +95,14 @@ int Cpu8080::op_jmp(void)
 //////////////////////////////////////////////////////////////
 //****************** Memory Operations *********************//
 //////////////////////////////////////////////////////////////
+int Cpu8080::op_lxi_d(void)
+{
+	m_regD = m_memory[m_pc+2];
+	m_regE = m_memory[m_pc+1];
+
+	return 3;
+}
+
 int Cpu8080::op_lxi_sp(void)
 {
 	m_sp = read16(m_pc+1);
