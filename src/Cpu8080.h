@@ -61,15 +61,21 @@ private:
 
 
 //////////////////////////////////////////////////////////////
-//                         Operations                          //
+//                      Operations                          //
 //                                                          //
 //    Operations should return the number of bytes used by  //
 //    that instruction, which is used to increment the      //
-//      program counter                                       //
+//      program counter                                     //
 //                                                          //
 //////////////////////////////////////////////////////////////
 
     int op_call(void);
+
+//////////////////////////////////////////////////////////////
+//***************** Addition Operations ********************//
+//////////////////////////////////////////////////////////////
+
+    int op_inx_h(void);
 
 //////////////////////////////////////////////////////////////
 //**************** Branching Operations ********************//

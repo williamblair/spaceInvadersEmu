@@ -37,6 +37,7 @@ void Cpu8080::run_next_op(void)
         case 0x11:    num_increment = op_lxi_d();  break; // LXI D, D16
         case 0x1A:    num_increment = op_ldax_d(); break; // LDAX D
         case 0x21:    num_increment = op_lxi_h();  break; // LXI H, D16
+        case 0x23:    num_increment = op_inx_h();  break; // INX H
 
         case 0x31:    num_increment = op_lxi_sp(); break; // LXI SP, D16
 
@@ -86,6 +87,24 @@ int Cpu8080::op_call(void)
 
     /* Don't increment PC afterwords */
     return 0;
+}
+
+//////////////////////////////////////////////////////////////
+//***************** Addition Operations ********************//
+//////////////////////////////////////////////////////////////
+int Cpu8080::op_inx_h(void)
+{
+    /* Get the current value */
+    uint16_t hl = (m_regH << 8) | m_regL;
+
+    /* Increment it */
+    hl++;
+
+    /* Write it back to the separate registers */
+    m_regH = (hl >> 8) & 0xFF;
+    m_regL = hl & 0xFF;
+
+    return 1;
 }
 
 //////////////////////////////////////////////////////////////
