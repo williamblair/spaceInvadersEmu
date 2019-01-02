@@ -34,7 +34,8 @@ public:
 
     void run_next_op(void);
 
-private:
+// uncommented to test for now
+//private:
 
     /* Program Counter */
     uint16_t m_pc;
@@ -48,6 +49,14 @@ private:
     uint8_t m_regD; uint8_t m_regE;   // called 'D' as a 16 bit pair
     uint8_t m_regH; uint8_t m_regL;   // called 'H' as a 16 bit pair
 
+    /* Flags (Status Register), technically should be a single char but this is easier */
+    uint8_t m_flagS;
+    uint8_t m_flagZ;
+    uint8_t m_flagP;
+    uint8_t m_flagC;
+    uint8_t m_flagAC; // this is reportedly unused by space invaders so we won't bother
+
+
     /* Memory */
     uint8_t m_memory[ROM_SIZE + RAM_SIZE + VRAM_SIZE];
 
@@ -55,6 +64,13 @@ private:
      * Helper functions
      */
     uint16_t read16(uint16_t addr); // reads two bytes, converting from little endian, from memory at the specified addr
+
+    /* Returns 1 if the number of 1s is odd
+     * from https://www.microchip.com/forums/m587239.aspx */
+    uint8_t get_odd_parity(uint8_t num);
+
+    /* Sets the Zero, Sign, and Parity flags based on the before and after result */
+    void set_zsp_flags(uint8_t prev, uint8_t res);
 
     /* Dummy function */
     int op_unimplemented(void);
@@ -75,7 +91,14 @@ private:
 //***************** Addition Operations ********************//
 //////////////////////////////////////////////////////////////
 
+    int op_inx_d(void);
     int op_inx_h(void);
+
+//////////////////////////////////////////////////////////////
+//*************** Subtraction Operations *******************//
+//////////////////////////////////////////////////////////////
+
+    int op_dcr_b(void);
 
 //////////////////////////////////////////////////////////////
 //**************** Branching Operations ********************//

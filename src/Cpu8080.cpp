@@ -14,6 +14,12 @@ Cpu8080::Cpu8080() {
     m_regD = 0; m_regE = 0;
     m_regH = 0; m_regL = 0;
 
+    m_flagS = 0;
+    m_flagZ = 0;
+    m_flagP = 0;
+    m_flagC = 0;
+    m_flagAC = 0;
+
     /* Load the space invaders rom into memory */
     memcpy(&m_memory[ROM_H_START], ROM_H, ROM_H_SIZE);
     memcpy(&m_memory[ROM_G_START], ROM_G, ROM_G_SIZE);
@@ -33,8 +39,10 @@ void Cpu8080::run_next_op(void)
     switch (opcode)
     {
         case 0x00:    num_increment = 1;           break; // NOP
+        case 0x05:    num_increment = op_dcr_b();  break; // DCR B
         case 0x06:    num_increment = op_mvi_b();  break; // MVI B, D8
         case 0x11:    num_increment = op_lxi_d();  break; // LXI D, D16
+        case 0x13:    num_increment = op_inx_d();  break; // INX D
         case 0x1A:    num_increment = op_ldax_d(); break; // LDAX D
         case 0x21:    num_increment = op_lxi_h();  break; // LXI H, D16
         case 0x23:    num_increment = op_inx_h();  break; // INX H
@@ -66,6 +74,25 @@ uint16_t Cpu8080::read16(uint16_t addr)
     return (byte2 << 8) | byte1;
 }
 
+/* Returns 1 if the number of 1s is odd
+ * from https://www.microchip.com/forums/m587239.aspx */
+uint8_t Cpu8080::get_odd_parity(uint8_t num)
+{
+    num ^= (num >> 4);
+    num ^= (num >> 2);
+    num ^= (num >> 1);
+
+    return num & 1;
+}
+
+/* Sets the Zero, Sign, and Parity flags based on the given result */
+void Cpu8080::set_zsp_flags(uint8_t prev, uint8_t res)
+{
+    m_flagZ = (res == 0);
+    m_flagS = (res > prev);        // if we just subtracted but the new number is LARGER, then we had underflow
+    m_flagP = !get_odd_parity(res);
+}
+
 int Cpu8080::op_unimplemented(void)
 {
     printf("  ** UNIMPLEMENTED OP **\n");
@@ -92,6 +119,21 @@ int Cpu8080::op_call(void)
 //////////////////////////////////////////////////////////////
 //***************** Addition Operations ********************//
 //////////////////////////////////////////////////////////////
+int Cpu8080::op_inx_d(void)
+{
+    /* Get the current value */
+    uint16_t de = (m_regD << 8) | m_regE;
+
+    /* Increment it */
+    de++;
+
+    /* Write it back to the separate registers */
+    m_regH = (de >> 8) & 0xFF;
+    m_regL = de & 0xFF;
+
+    return 1;
+}
+
 int Cpu8080::op_inx_h(void)
 {
     /* Get the current value */
@@ -103,6 +145,25 @@ int Cpu8080::op_inx_h(void)
     /* Write it back to the separate registers */
     m_regH = (hl >> 8) & 0xFF;
     m_regL = hl & 0xFF;
+
+    return 1;
+}
+
+//////////////////////////////////////////////////////////////
+//*************** Subtraction Operations *******************//
+//////////////////////////////////////////////////////////////
+
+// 0x05     DCR B   1   Z, S, P, AC     B <- B-1
+int Cpu8080::op_dcr_b(void)
+{
+    /* Store the current value */
+    uint8_t current = m_regB;
+
+    /* Decrement the register */
+    m_regB--;
+
+    /* Check flags */
+    set_zsp_flags(current, m_regB);
 
     return 1;
 }
