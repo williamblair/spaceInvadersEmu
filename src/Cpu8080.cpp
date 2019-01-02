@@ -51,8 +51,9 @@ void Cpu8080::run_next_op(void)
 
         case 0x77:    num_increment = op_mov_ma(); break; // MOV M, A
 
-        case 0xC3:    num_increment = op_jmp();      break; // JMP
-        case 0xCD:    num_increment = op_call();     break; // CALL
+        case 0xC2:    num_increment = op_jnz();    break; // JNZ
+        case 0xC3:    num_increment = op_jmp();    break; // JMP
+        case 0xCD:    num_increment = op_call();   break; // CALL
 
         /* Unhandled opcode, exit */
         default:    op_unimplemented(); break;
@@ -177,6 +178,21 @@ int Cpu8080::op_jmp(void)
 
     /* Don't increment the PC at the bottom of the loop */
     return 0;
+}
+
+int Cpu8080::op_jnz(void)
+{
+    /* m_flagZ == 0 -> result was NOT zero, so jump */
+    if (!m_flagZ) {
+
+        m_pc = read16(m_pc+1);
+
+        return 0;
+    }
+
+    else {
+        return 3; // just skip the data part of the instruction
+    }
 }
 
 //////////////////////////////////////////////////////////////
