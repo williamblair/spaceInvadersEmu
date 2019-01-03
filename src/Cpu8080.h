@@ -72,6 +72,10 @@ public:
     /* Sets the Zero, Sign, and Parity flags based on the before and after result */
     void set_zsp_flags(uint8_t prev, uint8_t res);
 
+    /* Sets the carry flag if the addition of the two inputs will overflow, otherwise
+     * sets to flagC to 0 */
+    void set_c_16(uint16_t num1, uint16_t num2);
+
     /* Dummy function */
     int op_unimplemented(void);
 
@@ -91,12 +95,18 @@ public:
     int op_push_d(void);
     int op_push_h(void);
 
+    int op_xchg(void);
+
 //////////////////////////////////////////////////////////////
 //***************** Addition Operations ********************//
 //////////////////////////////////////////////////////////////
 
     int op_inx_d(void);
     int op_inx_h(void);
+
+    int do_dad(uint16_t num); // runs DAD num, returns how much to increment PC by
+    int op_dad_d(void);
+    int op_dad_h(void);
 
 //////////////////////////////////////////////////////////////
 //*************** Subtraction Operations *******************//

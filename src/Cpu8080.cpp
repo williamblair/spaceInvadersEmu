@@ -47,10 +47,12 @@ void Cpu8080::run_next_op(void)
         case 0x0E:    num_increment = op_mvi_c();  break; // MVI C, D8
         case 0x11:    num_increment = op_lxi_d();  break; // LXI D, D16
         case 0x13:    num_increment = op_inx_d();  break; // INX D
+        case 0x19:    num_increment = op_dad_d();  break; // DAD D
         case 0x1A:    num_increment = op_ldax_d(); break; // LDAX D
         case 0x21:    num_increment = op_lxi_h();  break; // LXI H, D16
         case 0x23:    num_increment = op_inx_h();  break; // INX H
         case 0x26:    num_increment = op_mvi_h();  break; // MVI H, D8
+        case 0x29:    num_increment = op_dad_h();  break; // DAD H
 
         case 0x31:    num_increment = op_lxi_sp(); break; // LXI SP, D16
         case 0x36:    num_increment = op_mvi_m();  break; // MVI M, D8
@@ -67,6 +69,8 @@ void Cpu8080::run_next_op(void)
         case 0xD5:    num_increment = op_push_d(); break; // PUSH D
         case 0xE5:    num_increment = op_push_h(); break; // PUSH H
 
+        case 0xEB:    num_increment = op_xchg();   break; // XCHG
+
         case 0xFE:    num_increment = op_cpi();    break; // CPI
 
         /* Unhandled opcode, exit */
@@ -79,6 +83,10 @@ void Cpu8080::run_next_op(void)
 
     return;
 }
+
+//////////////////////////////////////////////////////////////
+//******************* Helper Functions *********************//
+//////////////////////////////////////////////////////////////
 
 uint16_t Cpu8080::read16(uint16_t addr)
 {
@@ -107,6 +115,20 @@ void Cpu8080::set_zsp_flags(uint8_t prev, uint8_t res)
     m_flagS = (res > prev);        // if we just subtracted but the new number is LARGER, then we had underflow
     m_flagP = !get_odd_parity(res);
 }
+
+void Cpu8080::set_c_16(uint16_t num1, uint16_t num2)
+{
+    m_flagC = ((0xFFFF - num1) < num2);
+}
+
+//////////////////////////////////////////////////////////////
+//                      Operations                          //
+//                                                          //
+//    Operations should return the number of bytes used by  //
+//    that instruction, which is used to increment the      //
+//      program counter                                     //
+//                                                          //
+//////////////////////////////////////////////////////////////
 
 int Cpu8080::op_unimplemented(void)
 {
@@ -151,6 +173,20 @@ int Cpu8080::op_push_h(void)
     return 1;
 }
 
+int Cpu8080::op_xchg(void)
+{
+    uint8_t tmp_d = m_regD;
+    uint8_t tmp_e = m_regE;
+
+    m_regD = m_regH;
+    m_regE = m_regL;
+
+    m_regH = tmp_d;
+    m_regL = tmp_e;
+
+    return 1;
+}
+
 //////////////////////////////////////////////////////////////
 //***************** Addition Operations ********************//
 //////////////////////////////////////////////////////////////
@@ -184,6 +220,40 @@ int Cpu8080::op_inx_h(void)
     m_regL = hl & 0xFF;
 
     return 1;
+}
+
+int Cpu8080::do_dad(uint16_t num)
+{
+    /* Get the current HL value */
+    uint16_t hl = (m_regH << 8) | m_regL;
+
+    /* Test if there will be carry */
+    set_c_16(hl, num);
+
+    /* Do the addition */
+    hl += num;
+
+    /* Store the value back in the two registers */
+    m_regH = (hl >> 8) & 0xFF;
+    m_regL = hl & 0xFF;
+
+    return 1;
+}
+
+int Cpu8080::op_dad_d(void)
+{
+    /* Get the current DE value */
+    uint16_t de = (m_regD << 8) | m_regE;
+
+    return do_dad(de);
+}
+
+int Cpu8080::op_dad_h(void)
+{
+    /* Get the current HL value */
+    uint16_t hl = (m_regH << 8) | m_regL;
+
+    return do_dad(hl);
 }
 
 //////////////////////////////////////////////////////////////
