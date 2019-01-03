@@ -92,8 +92,11 @@ public:
     int op_call(void);
     int op_ret (void);
 
+    int op_push_b(void);
     int op_push_d(void);
     int op_push_h(void);
+
+    int op_pop_h(void);
 
     int op_xchg(void);
 
@@ -142,6 +145,11 @@ public:
 //*************** Conditional Operations *******************//
 //////////////////////////////////////////////////////////////
     int op_cpi(void);
+
+//////////////////////////////////////////////////////////////
+//*************** Input/Output Operations ******************//
+//////////////////////////////////////////////////////////////
+    int op_out(void);
 };
 
 #endif /* SRC_CPU8080_H_ */

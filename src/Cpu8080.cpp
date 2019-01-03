@@ -63,10 +63,14 @@ void Cpu8080::run_next_op(void)
 
         case 0xC2:    num_increment = op_jnz();    break; // JNZ
         case 0xC3:    num_increment = op_jmp();    break; // JMP
+        case 0xC5:    num_increment = op_push_b(); break; // PUSH B
         case 0xC9:    num_increment = op_ret();    break; // RET
         case 0xCD:    num_increment = op_call();   break; // CALL
 
+        case 0xD3:    num_increment = op_out();    break; // OUT D8
         case 0xD5:    num_increment = op_push_d(); break; // PUSH D
+
+        case 0xE1:    num_increment = op_pop_h();  break; // POP  H
         case 0xE5:    num_increment = op_push_h(); break; // PUSH H
 
         case 0xEB:    num_increment = op_xchg();   break; // XCHG
@@ -153,10 +157,20 @@ int Cpu8080::op_call(void)
     return 0;
 }
 
+int Cpu8080::op_push_b(void)
+{
+    m_memory[m_sp - 1] = m_regB;
+    m_memory[m_sp - 2] = m_regC;
+
+    m_sp -= 2;
+
+    return 1;
+}
+
 int Cpu8080::op_push_d(void)
 {
-    m_regD = m_memory[m_sp - 1];
-    m_regE = m_memory[m_sp - 2];
+    m_memory[m_sp - 1] = m_regD;
+    m_memory[m_sp - 2] = m_regE;
 
     m_sp -= 2;
 
@@ -165,10 +179,20 @@ int Cpu8080::op_push_d(void)
 
 int Cpu8080::op_push_h(void)
 {
-    m_regH = m_memory[m_sp - 1];
-    m_regL = m_memory[m_sp - 2];
+    m_memory[m_sp - 1] = m_regH;
+    m_memory[m_sp - 2] = m_regL;
 
     m_sp -= 2;
+
+    return 1;
+}
+
+int Cpu8080::op_pop_h(void)
+{
+    m_regL = m_memory[m_sp];
+    m_regH = m_memory[m_sp + 1];
+
+    m_sp += 2;
 
     return 1;
 }
@@ -413,6 +437,21 @@ int Cpu8080::op_cpi(void)
     return 2;
 }
 
+//////////////////////////////////////////////////////////////
+//*************** Input/Output Operations ******************//
+//////////////////////////////////////////////////////////////
+int Cpu8080::op_out(void)
+{
+    /* Get the device to output to */
+    uint8_t device = m_memory[m_pc+1];
 
+    printf("  OUT: Device: 0x%X\n", device);
+
+    /* TODO - write the accumulator value to
+     * that device port
+     */
+
+    return 2;
+}
 
 
