@@ -96,6 +96,8 @@ public:
     int op_push_d(void);
     int op_push_h(void);
 
+    int op_pop_b(void);
+    int op_pop_d(void);
     int op_pop_h(void);
 
     int op_xchg(void);
@@ -108,6 +110,7 @@ public:
     int op_inx_h(void);
 
     int do_dad(uint16_t num); // runs DAD num, returns how much to increment PC by
+    int op_dad_b(void);
     int op_dad_d(void);
     int op_dad_h(void);
 
@@ -116,6 +119,7 @@ public:
 //////////////////////////////////////////////////////////////
 
     int op_dcr_b(void);
+    int op_dcr_c(void);
 
 //////////////////////////////////////////////////////////////
 //**************** Branching Operations ********************//
@@ -127,6 +131,7 @@ public:
 //****************** Memory Operations *********************//
 //////////////////////////////////////////////////////////////
     int op_lxi_sp(void);
+    int op_lxi_b (void);
     int op_lxi_d (void);
     int op_lxi_h (void);
 

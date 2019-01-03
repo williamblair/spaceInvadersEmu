@@ -42,8 +42,11 @@ void Cpu8080::run_next_op(void)
     switch (opcode)
     {
         case 0x00:    num_increment = 1;           break; // NOP
+        case 0x01:    num_increment = op_lxi_b();  break; // LXI B, D16
         case 0x05:    num_increment = op_dcr_b();  break; // DCR B
         case 0x06:    num_increment = op_mvi_b();  break; // MVI B, D8
+        case 0x09:    num_increment = op_dad_b();  break; // DAD B
+        case 0x0D:    num_increment = op_dcr_c();  break; // DCR C
         case 0x0E:    num_increment = op_mvi_c();  break; // MVI C, D8
         case 0x11:    num_increment = op_lxi_d();  break; // LXI D, D16
         case 0x13:    num_increment = op_inx_d();  break; // INX D
@@ -61,12 +64,14 @@ void Cpu8080::run_next_op(void)
         case 0x77:    num_increment = op_mov_ma(); break; // MOV M, A
         case 0x7C:    num_increment = op_mov_ha(); break; // MOV H, A
 
+        case 0xC1:    num_increment = op_pop_b();  break; // POP B
         case 0xC2:    num_increment = op_jnz();    break; // JNZ
         case 0xC3:    num_increment = op_jmp();    break; // JMP
         case 0xC5:    num_increment = op_push_b(); break; // PUSH B
         case 0xC9:    num_increment = op_ret();    break; // RET
         case 0xCD:    num_increment = op_call();   break; // CALL
 
+        case 0xD1:    num_increment = op_pop_d();  break; // POP D
         case 0xD3:    num_increment = op_out();    break; // OUT D8
         case 0xD5:    num_increment = op_push_d(); break; // PUSH D
 
@@ -187,6 +192,26 @@ int Cpu8080::op_push_h(void)
     return 1;
 }
 
+int Cpu8080::op_pop_b(void)
+{
+    m_regC = m_memory[m_sp];
+    m_regB = m_memory[m_sp + 1];
+
+    m_sp += 2;
+
+    return 1;
+}
+
+int Cpu8080::op_pop_d(void)
+{
+    m_regE = m_memory[m_sp];
+    m_regD = m_memory[m_sp + 1];
+
+    m_sp += 2;
+
+    return 1;
+}
+
 int Cpu8080::op_pop_h(void)
 {
     m_regL = m_memory[m_sp];
@@ -264,6 +289,14 @@ int Cpu8080::do_dad(uint16_t num)
     return 1;
 }
 
+int Cpu8080::op_dad_b(void)
+{
+    /* Get the current DE value */
+    uint16_t bc = (m_regB << 8) | m_regC;
+
+    return do_dad(bc);
+}
+
 int Cpu8080::op_dad_d(void)
 {
     /* Get the current DE value */
@@ -284,7 +317,7 @@ int Cpu8080::op_dad_h(void)
 //*************** Subtraction Operations *******************//
 //////////////////////////////////////////////////////////////
 
-// 0x05     DCR B   1   Z, S, P, AC     B <- B-1
+
 int Cpu8080::op_dcr_b(void)
 {
     /* Store the current value */
@@ -295,6 +328,20 @@ int Cpu8080::op_dcr_b(void)
 
     /* Check flags */
     set_zsp_flags(current, m_regB);
+
+    return 1;
+}
+
+int Cpu8080::op_dcr_c(void)
+{
+    /* Store the current value */
+    uint8_t current = m_regC;
+
+    /* Decrement the register */
+    m_regC--;
+
+    /* Check flags */
+    set_zsp_flags(current, m_regC);
 
     return 1;
 }
@@ -340,6 +387,14 @@ int Cpu8080::op_ret(void)
 //////////////////////////////////////////////////////////////
 //****************** Memory Operations *********************//
 //////////////////////////////////////////////////////////////
+int Cpu8080::op_lxi_b(void)
+{
+    m_regB = m_memory[m_pc+2];
+    m_regC = m_memory[m_pc+1];
+
+    return 3;
+}
+
 int Cpu8080::op_lxi_d(void)
 {
     m_regD = m_memory[m_pc+2];
