@@ -117,8 +117,15 @@ public:
     int op_ldax_d(void);
 
     int op_mvi_b (void);
+    int op_mvi_m (void);
 
     int op_mov_ma(void);
+    int op_mov_ah(void);
+
+//////////////////////////////////////////////////////////////
+//*************** Conditional Operations *******************//
+//////////////////////////////////////////////////////////////
+    int op_cpi(void);
 };
 
 #endif /* SRC_CPU8080_H_ */

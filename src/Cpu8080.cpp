@@ -48,13 +48,17 @@ void Cpu8080::run_next_op(void)
         case 0x23:    num_increment = op_inx_h();  break; // INX H
 
         case 0x31:    num_increment = op_lxi_sp(); break; // LXI SP, D16
+        case 0x36:    num_increment = op_mvi_m();  break; // MVI M, D8
 
         case 0x77:    num_increment = op_mov_ma(); break; // MOV M, A
+        case 0x7C:    num_increment = op_mov_ah(); break; // MOV H, A
 
         case 0xC2:    num_increment = op_jnz();    break; // JNZ
         case 0xC3:    num_increment = op_jmp();    break; // JMP
         case 0xC9:    num_increment = op_ret();    break; // RET
         case 0xCD:    num_increment = op_call();   break; // CALL
+
+        case 0xFE:    num_increment = op_cpi();    break; // CPI
 
         /* Unhandled opcode, exit */
         default:    op_unimplemented(); break;
@@ -105,11 +109,11 @@ int Cpu8080::op_unimplemented(void)
 int Cpu8080::op_call(void)
 {
     /* Save the NEXT instruction address */
-    m_memory[m_sp] = (m_pc+3) & 0xFF;           // save in reverse order - LOW bits first...
-    m_memory[m_sp+1] = ((m_pc+3) >> 8) & 0xFF;  //                         then high...
+    m_memory[m_sp-2] = (m_pc+3) & 0xFF;          // save in reverse order - LOW bits first...
+    m_memory[m_sp-1] = ((m_pc+3) >> 8) & 0xFF;   //                         then high...
 
     /* Increase the stack pointer */
-    m_sp += 2;
+    m_sp -= 2;
 
     /* Move to the called address*/
     m_pc = read16(m_pc+1);
@@ -143,6 +147,8 @@ int Cpu8080::op_inx_h(void)
 
     /* Increment it */
     hl++;
+
+    printf("  hl: 0x%X\n", hl);
 
     /* Write it back to the separate registers */
     m_regH = (hl >> 8) & 0xFF;
@@ -199,10 +205,10 @@ int Cpu8080::op_jnz(void)
 int Cpu8080::op_ret(void)
 {
     /* Move the PC to the previously saved instruction */
-    m_pc = read16(m_sp - 2);
+    m_pc = read16(m_sp);
 
     /* Move back the stack pointer */
-    m_sp -= 2;
+    m_sp += 2;
 
     /* Don't  increment PC plz */
     return 0;
@@ -248,12 +254,43 @@ int Cpu8080::op_mvi_b(void)
     return 2;
 }
 
+int Cpu8080::op_mvi_m(void)
+{
+    uint16_t addr = (m_regH << 8) | m_regL;
+    m_memory[addr] = m_memory[m_pc+1];
+
+    return 2;
+}
+
 int Cpu8080::op_mov_ma(void)
 {
     uint16_t addr = (m_regH << 8) | m_regL;
     m_memory[addr] = m_regA;
 
     return 1;
+}
+
+int Cpu8080::op_mov_ah(void)
+{
+    m_regA = m_regH;
+
+    return 1;
+}
+
+//////////////////////////////////////////////////////////////
+//*************** Conditional Operations *******************//
+//////////////////////////////////////////////////////////////
+int Cpu8080::op_cpi(void)
+{
+    /* Get the result to test */
+    uint8_t res = m_regA - m_memory[m_pc+1];
+
+    set_zsp_flags(m_regA, res);
+
+    /* Carry flag set if we needed to borrow on the subtraction */
+    m_flagC = (m_regA < m_memory[m_pc+1]);
+
+    return 2;
 }
 
 
