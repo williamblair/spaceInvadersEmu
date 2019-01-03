@@ -86,6 +86,10 @@ public:
 //////////////////////////////////////////////////////////////
 
     int op_call(void);
+    int op_ret (void);
+
+    int op_push_d(void);
+    int op_push_h(void);
 
 //////////////////////////////////////////////////////////////
 //***************** Addition Operations ********************//
@@ -105,7 +109,6 @@ public:
 //////////////////////////////////////////////////////////////
     int op_jmp(void);
     int op_jnz(void);
-    int op_ret(void);
 
 //////////////////////////////////////////////////////////////
 //****************** Memory Operations *********************//
@@ -117,10 +120,13 @@ public:
     int op_ldax_d(void);
 
     int op_mvi_b (void);
+    int op_mvi_c (void);
+    int op_mvi_h (void);
     int op_mvi_m (void);
 
     int op_mov_ma(void);
-    int op_mov_ah(void);
+    int op_mov_ha(void);
+    int op_mov_la(void);
 
 //////////////////////////////////////////////////////////////
 //*************** Conditional Operations *******************//

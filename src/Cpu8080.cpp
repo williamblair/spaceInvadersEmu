@@ -36,27 +36,36 @@ void Cpu8080::run_next_op(void)
     uint8_t opcode = m_memory[m_pc];
     int num_increment = 0; // how much to increase the PC by at the bottom
 
+    // debug - show which op is going to be ran
+    //std::string op;
+
     switch (opcode)
     {
         case 0x00:    num_increment = 1;           break; // NOP
         case 0x05:    num_increment = op_dcr_b();  break; // DCR B
         case 0x06:    num_increment = op_mvi_b();  break; // MVI B, D8
+        case 0x0E:    num_increment = op_mvi_c();  break; // MVI C, D8
         case 0x11:    num_increment = op_lxi_d();  break; // LXI D, D16
         case 0x13:    num_increment = op_inx_d();  break; // INX D
         case 0x1A:    num_increment = op_ldax_d(); break; // LDAX D
         case 0x21:    num_increment = op_lxi_h();  break; // LXI H, D16
         case 0x23:    num_increment = op_inx_h();  break; // INX H
+        case 0x26:    num_increment = op_mvi_h();  break; // MVI H, D8
 
         case 0x31:    num_increment = op_lxi_sp(); break; // LXI SP, D16
         case 0x36:    num_increment = op_mvi_m();  break; // MVI M, D8
 
+        case 0x6F:    num_increment = op_mov_la(); break; // MOV L, A
         case 0x77:    num_increment = op_mov_ma(); break; // MOV M, A
-        case 0x7C:    num_increment = op_mov_ah(); break; // MOV H, A
+        case 0x7C:    num_increment = op_mov_ha(); break; // MOV H, A
 
         case 0xC2:    num_increment = op_jnz();    break; // JNZ
         case 0xC3:    num_increment = op_jmp();    break; // JMP
         case 0xC9:    num_increment = op_ret();    break; // RET
         case 0xCD:    num_increment = op_call();   break; // CALL
+
+        case 0xD5:    num_increment = op_push_d(); break; // PUSH D
+        case 0xE5:    num_increment = op_push_h(); break; // PUSH H
 
         case 0xFE:    num_increment = op_cpi();    break; // CPI
 
@@ -120,6 +129,26 @@ int Cpu8080::op_call(void)
 
     /* Don't increment PC afterwords */
     return 0;
+}
+
+int Cpu8080::op_push_d(void)
+{
+    m_regD = m_memory[m_sp - 1];
+    m_regE = m_memory[m_sp - 2];
+
+    m_sp -= 2;
+
+    return 1;
+}
+
+int Cpu8080::op_push_h(void)
+{
+    m_regH = m_memory[m_sp - 1];
+    m_regL = m_memory[m_sp - 2];
+
+    m_sp -= 2;
+
+    return 1;
 }
 
 //////////////////////////////////////////////////////////////
@@ -254,6 +283,20 @@ int Cpu8080::op_mvi_b(void)
     return 2;
 }
 
+int Cpu8080::op_mvi_c(void)
+{
+    m_regC = m_memory[m_pc+1];
+
+    return 2;
+}
+
+int Cpu8080::op_mvi_h(void)
+{
+    m_regH = m_memory[m_pc+1];
+
+    return 2;
+}
+
 int Cpu8080::op_mvi_m(void)
 {
     uint16_t addr = (m_regH << 8) | m_regL;
@@ -270,9 +313,16 @@ int Cpu8080::op_mov_ma(void)
     return 1;
 }
 
-int Cpu8080::op_mov_ah(void)
+int Cpu8080::op_mov_ha(void)
 {
     m_regA = m_regH;
+
+    return 1;
+}
+
+int Cpu8080::op_mov_la(void)
+{
+    m_regL = m_regA;
 
     return 1;
 }
