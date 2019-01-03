@@ -146,8 +146,10 @@ public:
     int op_mov_ha(void);
     int op_mov_la(void);
 
+    int op_mov_am(void);
     int op_mov_dm(void);
     int op_mov_em(void);
+    int op_mov_hm(void);
 
 //////////////////////////////////////////////////////////////
 //*************** Conditional Operations *******************//

@@ -63,9 +63,11 @@ void Cpu8080::run_next_op(void)
         case 0x56:    num_increment = op_mov_dm(); break; // MOV D, M
         case 0x5E:    num_increment = op_mov_em(); break; // MOV E, M
 
+        case 0x66:    num_increment = op_mov_hm(); break; // MOV H, M
         case 0x6F:    num_increment = op_mov_la(); break; // MOV L, A
         case 0x77:    num_increment = op_mov_ma(); break; // MOV M, A
         case 0x7C:    num_increment = op_mov_ha(); break; // MOV H, A
+        case 0x7E:    num_increment = op_mov_am(); break; // MOV A, M
 
         case 0xC1:    num_increment = op_pop_b();  break; // POP B
         case 0xC2:    num_increment = op_jnz();    break; // JNZ
@@ -479,6 +481,15 @@ int Cpu8080::op_mov_la(void)
     return 1;
 }
 
+int Cpu8080::op_mov_am(void)
+{
+    uint16_t addr = (m_regH << 8) | m_regL;
+
+    m_regA = m_memory[addr];
+
+    return 1;
+}
+
 int Cpu8080::op_mov_dm(void)
 {
     uint16_t addr = (m_regH << 8) | m_regL;
@@ -493,6 +504,15 @@ int Cpu8080::op_mov_em(void)
     uint16_t addr = (m_regH << 8) | m_regL;
 
     m_regE = m_memory[addr];
+
+    return 1;
+}
+
+int Cpu8080::op_mov_hm(void)
+{
+    uint16_t addr = (m_regH << 8) | m_regL;
+
+    m_regH = m_memory[addr];
 
     return 1;
 }
