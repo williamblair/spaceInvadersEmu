@@ -1,5 +1,7 @@
 *.cproject
 *.project
 *.settings
+*.swp
+SpaceInvaders
 Debug
 

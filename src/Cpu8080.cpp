@@ -60,6 +60,9 @@ void Cpu8080::run_next_op(void)
         case 0x31:    num_increment = op_lxi_sp(); break; // LXI SP, D16
         case 0x36:    num_increment = op_mvi_m();  break; // MVI M, D8
 
+        case 0x56:    num_increment = op_mov_dm(); break; // MOV D, M
+        case 0x5E:    num_increment = op_mov_em(); break; // MOV E, M
+
         case 0x6F:    num_increment = op_mov_la(); break; // MOV L, A
         case 0x77:    num_increment = op_mov_ma(); break; // MOV M, A
         case 0x7C:    num_increment = op_mov_ha(); break; // MOV H, A
@@ -475,6 +478,25 @@ int Cpu8080::op_mov_la(void)
 
     return 1;
 }
+
+int Cpu8080::op_mov_dm(void)
+{
+    uint16_t addr = (m_regH << 8) | m_regL;
+
+    m_regD = m_memory[addr];
+
+    return 1;
+}
+
+int Cpu8080::op_mov_em(void)
+{
+    uint16_t addr = (m_regH << 8) | m_regL;
+
+    m_regE = m_memory[addr];
+
+    return 1;
+}
+
 
 //////////////////////////////////////////////////////////////
 //*************** Conditional Operations *******************//
