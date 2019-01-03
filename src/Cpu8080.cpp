@@ -53,6 +53,7 @@ void Cpu8080::run_next_op(void)
 
         case 0xC2:    num_increment = op_jnz();    break; // JNZ
         case 0xC3:    num_increment = op_jmp();    break; // JMP
+        case 0xC9:    num_increment = op_ret();    break; // RET
         case 0xCD:    num_increment = op_call();   break; // CALL
 
         /* Unhandled opcode, exit */
@@ -104,8 +105,8 @@ int Cpu8080::op_unimplemented(void)
 int Cpu8080::op_call(void)
 {
     /* Save the NEXT instruction address */
-    m_memory[m_sp-1] = ((m_pc+3) >> 8) & 0xFF;
-    m_memory[m_sp-2] = (m_pc+3) & 0xFF;
+    m_memory[m_sp] = (m_pc+3) & 0xFF;           // save in reverse order - LOW bits first...
+    m_memory[m_sp+1] = ((m_pc+3) >> 8) & 0xFF;  //                         then high...
 
     /* Increase the stack pointer */
     m_sp += 2;
@@ -193,6 +194,18 @@ int Cpu8080::op_jnz(void)
     else {
         return 3; // just skip the data part of the instruction
     }
+}
+
+int Cpu8080::op_ret(void)
+{
+    /* Move the PC to the previously saved instruction */
+    m_pc = read16(m_sp - 2);
+
+    /* Move back the stack pointer */
+    m_sp -= 2;
+
+    /* Don't  increment PC plz */
+    return 0;
 }
 
 //////////////////////////////////////////////////////////////
