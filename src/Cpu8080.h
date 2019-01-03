@@ -92,6 +92,7 @@ public:
     int op_call(void);
     int op_ret (void);
 
+    int op_push_psw(void);
     int op_push_b(void);
     int op_push_d(void);
     int op_push_h(void);
@@ -142,6 +143,8 @@ public:
     int op_mvi_h (void);
     int op_mvi_m (void);
 
+    int op_mov_ad(void);
+
     int op_mov_ma(void);
     int op_mov_ha(void);
     int op_mov_la(void);
@@ -160,6 +163,11 @@ public:
 //*************** Input/Output Operations ******************//
 //////////////////////////////////////////////////////////////
     int op_out(void);
+
+//////////////////////////////////////////////////////////////
+//******************* Shift Operations *********************//
+//////////////////////////////////////////////////////////////
+    int op_rrc_a(void);
 };
 
 #endif /* SRC_CPU8080_H_ */

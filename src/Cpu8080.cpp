@@ -48,6 +48,7 @@ void Cpu8080::run_next_op(void)
         case 0x09:    num_increment = op_dad_b();  break; // DAD B
         case 0x0D:    num_increment = op_dcr_c();  break; // DCR C
         case 0x0E:    num_increment = op_mvi_c();  break; // MVI C, D8
+        case 0x0F:    num_increment = op_rrc_a();  break; // RRC A
         case 0x11:    num_increment = op_lxi_d();  break; // LXI D, D16
         case 0x13:    num_increment = op_inx_d();  break; // INX D
         case 0x19:    num_increment = op_dad_d();  break; // DAD D
@@ -65,6 +66,7 @@ void Cpu8080::run_next_op(void)
 
         case 0x66:    num_increment = op_mov_hm(); break; // MOV H, M
         case 0x6F:    num_increment = op_mov_la(); break; // MOV L, A
+        case 0x7A:    num_increment = op_mov_ad(); break; // MOV A, D
         case 0x77:    num_increment = op_mov_ma(); break; // MOV M, A
         case 0x7C:    num_increment = op_mov_ha(); break; // MOV H, A
         case 0x7E:    num_increment = op_mov_am(); break; // MOV A, M
@@ -86,6 +88,7 @@ void Cpu8080::run_next_op(void)
         case 0xEB:    num_increment = op_xchg();   break; // XCHG
 
         case 0xFE:    num_increment = op_cpi();    break; // CPI
+        case 0xF5:    num_increment = op_push_psw(); break; // PUSH PSW
 
         /* Unhandled opcode, exit */
         default:    op_unimplemented(); break;
@@ -165,6 +168,25 @@ int Cpu8080::op_call(void)
 
     /* Don't increment PC afterwords */
     return 0;
+}
+
+int Cpu8080::op_push_psw(void)
+{
+    m_memory[m_sp - 1] = m_regA;
+
+    /* Flags are technically supposed to be stored in reg PSW,
+     * but we've stored them seperately so we need to 
+     * compensate
+     */
+    m_memory[m_sp - 2] = m_flagZ       |
+                         m_flagS  << 1 | 
+                         m_flagP  << 2 | 
+                         m_flagC  << 3 |
+                         m_flagAC << 4;
+
+    m_sp -= 2;
+
+    return 1;
 }
 
 int Cpu8080::op_push_b(void)
@@ -481,6 +503,13 @@ int Cpu8080::op_mov_la(void)
     return 1;
 }
 
+int Cpu8080::op_mov_ad(void)
+{
+    m_regA = m_regD;
+
+    return 1;
+}
+
 int Cpu8080::op_mov_am(void)
 {
     uint16_t addr = (m_regH << 8) | m_regL;
@@ -550,5 +579,31 @@ int Cpu8080::op_out(void)
 
     return 2;
 }
+
+
+//////////////////////////////////////////////////////////////
+//******************* Shift Operations *********************//
+//////////////////////////////////////////////////////////////
+int Cpu8080::op_rrc_a(void)
+{
+    /* Save the current bit 0 */
+    uint8_t bit0 = m_regA & 1;
+
+    /* Shift the register */
+    m_regA >>= 1;
+
+    /* Set the carry flag with the removed bit */
+    m_flagC = bit0;
+
+    /* Set bit 7 to the saved bit */
+    m_regA |= bit0 << 7;
+
+    return 1;
+}
+
+
+
+
+
 
 
