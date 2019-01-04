@@ -60,6 +60,8 @@ void Cpu8080::run_next_op(void)
 
         case 0x31:    num_increment = op_lxi_sp(); break; // LXI SP, D16
         case 0x36:    num_increment = op_mvi_m();  break; // MVI M, D8
+        case 0x3A:    num_increment = op_lda();    break; // LDA ADR
+        case 0x3E:    num_increment = op_mvi_a();  break; // MVI A, D8
 
         case 0x56:    num_increment = op_mov_dm(); break; // MOV D, M
         case 0x5E:    num_increment = op_mov_em(); break; // MOV E, M
@@ -68,6 +70,7 @@ void Cpu8080::run_next_op(void)
         case 0x6F:    num_increment = op_mov_la(); break; // MOV L, A
         case 0x7A:    num_increment = op_mov_ad(); break; // MOV A, D
         case 0x77:    num_increment = op_mov_ma(); break; // MOV M, A
+        case 0x7B:    num_increment = op_mov_ae(); break; // MOV A, E
         case 0x7C:    num_increment = op_mov_ha(); break; // MOV H, A
         case 0x7E:    num_increment = op_mov_am(); break; // MOV A, M
 
@@ -89,7 +92,8 @@ void Cpu8080::run_next_op(void)
 
         case 0xEB:    num_increment = op_xchg();   break; // XCHG
 
-        case 0xFE:    num_increment = op_cpi();    break; // CPI
+        case 0xF1:    num_increment = op_pop_psw();  break; // POP PSW
+        case 0xFE:    num_increment = op_cpi();      break; // CPI
         case 0xF5:    num_increment = op_push_psw(); break; // PUSH PSW
 
         /* Unhandled opcode, exit */
@@ -246,6 +250,26 @@ int Cpu8080::op_pop_h(void)
     m_regL = m_memory[m_sp];
     m_regH = m_memory[m_sp + 1];
 
+    m_sp += 2;
+
+    return 1;
+}
+
+int Cpu8080::op_pop_psw(void)
+{
+    /* Get all of the flags as a byte */
+    uint8_t flags = m_memory[m_sp];
+
+    /* Parse the flags */
+    m_flagZ  = (flags & 1 == 1);
+    m_flagS  = (flags & 2 == 2);
+    m_flagP  = (flags & 4 == 4);
+    m_flagC  = (flags & 8 == 5); // this one seems weird...
+    m_flagAC = (flags & 16 == 16);
+
+    /* Get register A */
+    m_regA = m_memory[m_sp + 1];
+    
     m_sp += 2;
 
     return 1;
@@ -471,6 +495,26 @@ int Cpu8080::op_ldax_d(void)
     return 1;
 }
 
+int Cpu8080::op_lda(void)
+{
+    /* Get the address */
+    uint8_t  byte1 = m_memory[m_pc+1];
+    uint8_t  byte2 = m_memory[m_pc+2];
+    uint16_t addr = (byte2 << 8) | byte1;
+
+    /* Store the memory in A */
+    m_regA = m_memory[addr];
+
+    return 3;
+}
+
+int Cpu8080::op_mvi_a(void)
+{
+    m_regA = m_memory[m_pc+1];
+
+    return 2;
+}
+
 int Cpu8080::op_mvi_b(void)
 {
     m_regB = m_memory[m_pc+1];
@@ -525,6 +569,13 @@ int Cpu8080::op_mov_la(void)
 int Cpu8080::op_mov_ad(void)
 {
     m_regA = m_regD;
+
+    return 1;
+}
+
+int Cpu8080::op_mov_ae(void)
+{
+    m_regA = m_regE;
 
     return 1;
 }

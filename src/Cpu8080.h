@@ -100,6 +100,7 @@ public:
     int op_pop_b(void);
     int op_pop_d(void);
     int op_pop_h(void);
+    int op_pop_psw(void);
 
     int op_xchg(void);
 
@@ -139,13 +140,16 @@ public:
     int op_lxi_h (void);
 
     int op_ldax_d(void);
+    int op_lda   (void);
 
+    int op_mvi_a (void);
     int op_mvi_b (void);
     int op_mvi_c (void);
     int op_mvi_h (void);
     int op_mvi_m (void);
 
     int op_mov_ad(void);
+    int op_mov_ae(void);
 
     int op_mov_ma(void);
     int op_mov_ha(void);
