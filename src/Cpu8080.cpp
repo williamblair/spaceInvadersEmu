@@ -20,6 +20,8 @@ Cpu8080::Cpu8080() {
     m_flagC = 0;
     m_flagAC = 0;
 
+    m_interrupts = 0;
+
     /* Load the space invaders rom into memory */
     memcpy(&m_memory[ROM_H_START], ROM_H, ROM_H_SIZE);
     memcpy(&m_memory[ROM_G_START], ROM_G, ROM_G_SIZE);
@@ -59,6 +61,7 @@ void Cpu8080::run_next_op(void)
         case 0x29:    num_increment = op_dad_h();  break; // DAD H
 
         case 0x31:    num_increment = op_lxi_sp(); break; // LXI SP, D16
+        case 0x32:    num_increment = op_sta();    break; // STA ADR
         case 0x36:    num_increment = op_mvi_m();  break; // MVI M, D8
         case 0x3A:    num_increment = op_lda();    break; // LDA ADR
         case 0x3E:    num_increment = op_mvi_a();  break; // MVI A, D8
@@ -73,6 +76,9 @@ void Cpu8080::run_next_op(void)
         case 0x7B:    num_increment = op_mov_ae(); break; // MOV A, E
         case 0x7C:    num_increment = op_mov_ha(); break; // MOV H, A
         case 0x7E:    num_increment = op_mov_am(); break; // MOV A, M
+
+        case 0xA7:    num_increment = op_ana_a();  break; // ANA A
+        case 0xAF:    num_increment = op_xra_a();  break; // XRA A
 
         case 0xC1:    num_increment = op_pop_b();  break; // POP B
         case 0xC2:    num_increment = op_jnz();    break; // JNZ
@@ -93,6 +99,7 @@ void Cpu8080::run_next_op(void)
         case 0xEB:    num_increment = op_xchg();   break; // XCHG
 
         case 0xF1:    num_increment = op_pop_psw();  break; // POP PSW
+        case 0xFB:    num_increment = op_ei();       break; // EI
         case 0xFE:    num_increment = op_cpi();      break; // CPI
         case 0xF5:    num_increment = op_push_psw(); break; // PUSH PSW
 
@@ -142,6 +149,14 @@ void Cpu8080::set_zsp_flags(uint8_t prev, uint8_t res)
 void Cpu8080::set_c_16(uint16_t num1, uint16_t num2)
 {
     m_flagC = ((0xFFFF - num1) < num2);
+}
+
+void Cpu8080::set_flags_logical(uint8_t res)
+{
+    m_flagZ = (res == 0);
+    m_flagS = ((res & 0x80) == 0x80);
+    m_flagC = 0;
+    m_flagP = !get_odd_parity(res);
 }
 
 //////////////////////////////////////////////////////////////
@@ -285,6 +300,15 @@ int Cpu8080::op_xchg(void)
 
     m_regH = tmp_d;
     m_regL = tmp_e;
+
+    return 1;
+}
+
+int Cpu8080::op_ei(void)
+{
+    m_interrupts = 1;
+
+    printf("  EI: Interrupts flag set to 1\n");
 
     return 1;
 }
@@ -616,6 +640,19 @@ int Cpu8080::op_mov_hm(void)
     return 1;
 }
 
+int Cpu8080::op_sta(void)
+{
+    /* Get the location to store A in */
+    uint8_t byte1 = m_memory[m_pc+1];
+    uint8_t byte2 = m_memory[m_pc+2];
+    uint16_t addr = (byte2 << 8) | byte1;
+
+    /* Set the location with A */
+    m_memory[addr] = m_regA;
+
+    return 3;
+}
+
 
 //////////////////////////////////////////////////////////////
 //*************** Conditional Operations *******************//
@@ -679,16 +716,37 @@ int Cpu8080::op_ani(void)
     /* Set the result */
     m_regA &= m_memory[m_pc + 1];
 
-    /* Set flags */
-    m_flagZ = (m_regA == 0);
-    m_flagS = ((m_regA & 0x80) == 0x80);
-    m_flagC = 0;
-    m_flagP = !get_odd_parity(m_regA);
+    /* Set Flags */
+    set_flags_logical(m_regA);
 
     return 2;
 }
 
+int Cpu8080::op_ana_a(void)
+{
+    /* AND A */
+    m_regA &= m_regA;
 
+    /* Set Flags */
+    set_flags_logical(m_regA);
+
+    return 1;
+}
+
+
+//////////////////////////////////////////////////////////////
+//******************** XOR Operations **********************//
+//////////////////////////////////////////////////////////////
+int Cpu8080::op_xra_a(void)
+{
+    /* XOR A */
+    m_regA ^= m_regA; // this will always set it to zero, yes?
+
+    /* Set flags */
+    set_flags_logical(m_regA);
+
+    return 1;
+}
 
 
 

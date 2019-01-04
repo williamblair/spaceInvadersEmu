@@ -56,6 +56,9 @@ public:
     uint8_t m_flagC;
     uint8_t m_flagAC; // this is reportedly unused by space invaders so we won't bother
 
+    /* Interrupt flip-flop flag */
+    uint8_t m_interrupts;
+
 
     /* Memory */
     uint8_t m_memory[ROM_SIZE + RAM_SIZE + VRAM_SIZE];
@@ -75,6 +78,9 @@ public:
     /* Sets the carry flag if the addition of the two inputs will overflow, otherwise
      * sets to flagC to 0 */
     void set_c_16(uint16_t num1, uint16_t num2);
+
+    /* Sets flags after logical operations, e.g. AND */
+    void set_flags_logical(uint8_t res);
 
     /* Dummy function */
     int op_unimplemented(void);
@@ -103,6 +109,8 @@ public:
     int op_pop_psw(void);
 
     int op_xchg(void);
+
+    int op_ei(void);
 
 //////////////////////////////////////////////////////////////
 //***************** Addition Operations ********************//
@@ -160,6 +168,8 @@ public:
     int op_mov_em(void);
     int op_mov_hm(void);
 
+    int op_sta   (void);
+
 //////////////////////////////////////////////////////////////
 //*************** Conditional Operations *******************//
 //////////////////////////////////////////////////////////////
@@ -179,6 +189,14 @@ public:
 //******************** AND Operations **********************//
 //////////////////////////////////////////////////////////////
     int op_ani(void);
+
+    int op_ana_a(void);
+
+//////////////////////////////////////////////////////////////
+//******************** XOR Operations **********************//
+//////////////////////////////////////////////////////////////
+    int op_xra_a(void);
+
 };
 
 #endif /* SRC_CPU8080_H_ */
