@@ -75,6 +75,7 @@ void Cpu8080::run_next_op(void)
         case 0xC2:    num_increment = op_jnz();    break; // JNZ
         case 0xC3:    num_increment = op_jmp();    break; // JMP
         case 0xC5:    num_increment = op_push_b(); break; // PUSH B
+        case 0xC6:    num_increment = op_adi();    break; // ADI D8
         case 0xC9:    num_increment = op_ret();    break; // RET
         case 0xCD:    num_increment = op_call();   break; // CALL
 
@@ -84,6 +85,7 @@ void Cpu8080::run_next_op(void)
 
         case 0xE1:    num_increment = op_pop_h();  break; // POP  H
         case 0xE5:    num_increment = op_push_h(); break; // PUSH H
+        case 0xE6:    num_increment = op_ani();    break; // ANI D8
 
         case 0xEB:    num_increment = op_xchg();   break; // XCHG
 
@@ -338,6 +340,23 @@ int Cpu8080::op_dad_h(void)
     uint16_t hl = (m_regH << 8) | m_regL;
 
     return do_dad(hl);
+}
+
+int Cpu8080::op_adi(void)
+{
+    /* Save current value */
+    uint8_t temp = m_regA;
+
+    /* Add to A */
+    m_regA += m_memory[m_pc+1];
+
+    /* Check flags */
+    m_flagZ = (m_regA == 0);
+    m_flagS = ((m_regA & 0x80) == 0x80);
+    m_flagC = (m_regA < temp); // if we just ADDED but the result is LOWER then we overflowed
+    m_flagP = !get_odd_parity(m_regA);
+
+    return 2;
 }
 
 //////////////////////////////////////////////////////////////
@@ -601,7 +620,22 @@ int Cpu8080::op_rrc_a(void)
     return 1;
 }
 
+//////////////////////////////////////////////////////////////
+//******************** AND Operations **********************//
+//////////////////////////////////////////////////////////////
+int Cpu8080::op_ani(void)
+{
+    /* Set the result */
+    m_regA &= m_memory[m_pc + 1];
 
+    /* Set flags */
+    m_flagZ = (m_regA == 0);
+    m_flagS = ((m_regA & 0x80) == 0x80);
+    m_flagC = 0;
+    m_flagP = !get_odd_parity(m_regA);
+
+    return 2;
+}
 
 
 
