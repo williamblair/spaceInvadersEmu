@@ -27,6 +27,10 @@ Cpu8080::Cpu8080() {
     m_regShift = 0;
     m_port3_res = 0;
 
+    /* Init memory to 0 */
+    memset(m_memory, 0, sizeof(m_memory));
+    //printf("m memory size: %ld\n", sizeof(m_memory));
+
     /* Load the space invaders rom into memory */
     memcpy(&m_memory[ROM_H_START], ROM_H, ROM_H_SIZE);
     memcpy(&m_memory[ROM_G_START], ROM_G, ROM_G_SIZE);

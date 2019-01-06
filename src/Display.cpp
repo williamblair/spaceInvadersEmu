@@ -114,7 +114,7 @@ void Display::update(void)
         } // else if (SDL_KEYUP)
     }
 
-    SDL_Delay(1000.0f/30.0f);
+    //SDL_Delay(1000.0f/30.0f);
 
     set_pixels();
 
