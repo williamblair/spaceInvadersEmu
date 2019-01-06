@@ -9,6 +9,10 @@ Display::Display(void)
     m_memory = NULL;
     m_screen = NULL;
     m_space_image = NULL;
+
+    m_screen_rect.x = 0; m_screen_rect.y = 0;
+    m_screen_rect.w = m_width;
+    m_screen_rect.h = m_height;
 }
 
 Display::~Display(void)
@@ -120,11 +124,15 @@ void Display::update(void)
 
 void Display::set_pixels(void)
 {
-    int i, j;
-    int pixel_index = 0;
+    int i, j, p, offset;
+    Uint8 pix;
+    Uint32 *p1;
+    //int pixel_index = 0;
+    Uint8 *space_mem = &m_memory[0x2400];
+    Uint8 *display_mem = (Uint8 *)(m_space_image->pixels);
 
     SDL_LockSurface(m_space_image);
-
+#if 0
     for (i = m_vid_start; i < m_vid_end; ++i)
     {
         /* Get the current byte */
@@ -136,6 +144,32 @@ void Display::set_pixels(void)
                 (cur & 1) ? 0xFFFFFFFF : 0x0;
 
             cur >>= 1;
+        }
+    }
+#endif
+
+    for (i = 0; i < 224; ++i)
+    {
+        for (j = 0; j < 256; j+=8)
+        {
+            // Read the first 1bit pixel
+            // divide by 8 since there are 8 pixels/byte
+            pix = space_mem[(i*(256/8)) + j/8];
+
+            // That makes 8 output vertical pixels
+            // we need to do a vertical flip
+            // so j needs to start at the last line
+            // and advance backward through the buffer
+            offset = (255 - j) * (224 * 4) + (i*4);
+            p1 = (Uint32*)(&display_mem[offset]);
+
+            for (p = 0; p < 8; ++p)
+            {
+                if ((pix & (1<<p)) != 0) *p1 = 0xFFFFFFFF;
+                else                     *p1 = 0x0;
+
+                p1 -= 224; // next line
+            }
         }
     }
 

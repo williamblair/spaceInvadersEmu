@@ -164,6 +164,24 @@ void Cpu8080::set_flags_logical(uint8_t res)
     m_flagP = !get_odd_parity(res);
 }
 
+
+/*
+ * Interrupt
+ */
+void Cpu8080::run_interrupt(int num)
+{
+    /* Run 'PUSH PC' */
+    m_memory[m_sp - 1] = (m_pc >> 8) & 0xFF;
+    m_memory[m_sp - 2] = m_pc & 0xFF;
+
+    m_sp -= 2;
+
+    /* Set the PC to the low memory vector 
+     * This is identical to an "RST num" instruction
+     */
+    m_pc = num << 3; // num * 8
+}
+
 //////////////////////////////////////////////////////////////
 //                      Operations                          //
 //                                                          //

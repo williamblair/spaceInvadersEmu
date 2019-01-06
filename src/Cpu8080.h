@@ -94,6 +94,11 @@ public:
     /* Dummy function */
     int op_unimplemented(void);
 
+    /*
+     * Interrupts
+     */
+    void run_interrupt(int num); // num = which interrupt to run
+
 
 //////////////////////////////////////////////////////////////
 //                      Operations                          //
