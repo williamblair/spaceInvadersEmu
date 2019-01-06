@@ -7,8 +7,8 @@
 #include <cstring>
 #include <cinttypes>
 
-#ifndef SRC_CPU8080_H_
-#define SRC_CPU8080_H_
+#ifndef CPU8080_H_INCLUDED
+#define CPU8080_H_INCLUDED
 
 /* ROM data */
 #include "../data/romE.h"
@@ -26,11 +26,273 @@
 #define ROM_F_START 0x1000
 #define ROM_E_START 0x1800
 
+/* Op lookup table for info/logging */
+static const char *op_lookup[] = {
+    "NOP",
+    "LXI B,D",
+    "STAX B",
+    "INX B",
+    "INR B",
+    "DCR B",
+    "MVI B, D",
+    "RLC",
+    "-",
+    "DAD B",
+    "LDAX B",
+    "DCX B",
+    "INR C",
+    "DCR C",
+    "MVI C,D",
+    "RRC",
+    "-",
+    "LXI D,D",
+    "STAX D",
+    "INX D",
+    "INR D",
+    "DCR D",
+    "MVI D, D",
+    "RAL",
+    "-",
+    "DAD D",
+    "LDAX D",
+    "DCX D",
+    "INR E",
+    "DCR E",
+    "MVI E,D",
+    "RAR",
+    "-",
+    "LXI H,D",
+    "SHLD adr",
+    "INX H",
+    "INR H",
+    "DCR H",
+    "MVI H,D",
+    "DAA",
+    "-",
+    "DAD H",
+    "LHLD adr",
+    "DCX H",
+    "INR L",
+    "DCR L",
+    "MVI L, D",
+    "CMA",
+    "-",
+    "LXI SP, D",
+    "STA adr",
+    "INX SP",
+    "INR M",
+    "DCR M",
+    "MVI M,D",
+    "STC",
+    "-",
+    "DAD SP",
+    "LDA adr",
+    "DCX SP",
+    "INR A",
+    "DCR A",
+    "MVI A,D",
+    "CMC",
+    "MOV B,B",
+    "MOV B,C",
+    "MOV B,D",
+    "MOV B,E",
+    "MOV B,H",
+    "MOV B,L",
+    "MOV B,M",
+    "MOV B,A",
+    "MOV C,B",
+    "MOV C,C",
+    "MOV C,D",
+    "MOV C,E",
+    "MOV C,H",
+    "MOV C,L",
+    "MOV C,M",
+    "MOV C,A",
+    "MOV D,B",
+    "MOV D,C",
+    "MOV D,D",
+    "MOV D,E",
+    "MOV D,H",
+    "MOV D,L",
+    "MOV D,M",
+    "MOV D,A",
+    "MOV E,B",
+    "MOV E,C",
+    "MOV E,D",
+    "MOV E,E",
+    "MOV E,H",
+    "MOV E,L",
+    "MOV E,M",
+    "MOV E,A",
+    "MOV H,B",
+    "MOV H,C",
+    "MOV H,D",
+    "MOV H,E",
+    "MOV H,H",
+    "MOV H,L",
+    "MOV H,M",
+    "MOV H,A",
+    "MOV L,B",
+    "MOV L,C",
+    "MOV L,D",
+    "MOV L,E",
+    "MOV L,H",
+    "MOV L,L",
+    "MOV L,M",
+    "MOV L,A",
+    "MOV M,B",
+    "MOV M,C",
+    "MOV M,D",
+    "MOV M,E",
+    "MOV M,H",
+    "MOV M,L",
+    "HLT",
+    "MOV M,A",
+    "MOV A,B",
+    "MOV A,C",
+    "MOV A,D",
+    "MOV A,E",
+    "MOV A,H",
+    "MOV A,L",
+    "MOV A,M",
+    "MOV A,A",
+    "ADD B",
+    "ADD C",
+    "ADD D",
+    "ADD E",
+    "ADD H",
+    "ADD L",
+    "ADD M",
+    "ADD A",
+    "ADC B",
+    "ADC C",
+    "ADC D",
+    "ADC E",
+    "ADC H",
+    "ADC L",
+    "ADC M",
+    "ADC A",
+    "SUB B",
+    "SUB C",
+    "SUB D",
+    "SUB E",
+    "SUB H",
+    "SUB L",
+    "SUB M",
+    "SUB A",
+    "SBB B",
+    "SBB C",
+    "SBB D",
+    "SBB E",
+    "SBB H",
+    "SBB L",
+    "SBB M",
+    "SBB A",
+    "ANA B",
+    "ANA C",
+    "ANA D",
+    "ANA E",
+    "ANA H",
+    "ANA L",
+    "ANA M",
+    "ANA A",
+    "XRA B",
+    "XRA C",
+    "XRA D",
+    "XRA E",
+    "XRA H",
+    "XRA L",
+    "XRA M",
+    "XRA A",
+    "ORA B",
+    "ORA C",
+    "ORA D",
+    "ORA E",
+    "ORA H",
+    "ORA L",
+    "ORA M",
+    "ORA A",
+    "CMP B",
+    "CMP C",
+    "CMP D",
+    "CMP E",
+    "CMP H",
+    "CMP L",
+    "CMP M",
+    "CMP A",
+    "RNZ",
+    "POP B",
+    "JNZ adr",
+    "JMP adr",
+    "CNZ adr",
+    "PUSH B",
+    "ADI D",
+    "RST",
+    "RZ",
+    "RET",
+    "JZ adr",
+    "-",
+    "CZ adr",
+    "CALL adr",
+    "ACI D",
+    "RST",
+    "RNC",
+    "POP D",
+    "JNC adr",
+    "OUT D",
+    "CNC adr",
+    "PUSH D",
+    "SUI D",
+    "RST",
+    "RC",
+    "-",
+    "JC adr",
+    "IN D",
+    "CC adr",
+    "-",
+    "SBI D",
+    "RST",
+    "RPO",
+    "POP H",
+    "JPO adr",
+    "XTHL",
+    "CPO adr",
+    "PUSH H",
+    "ANI D",
+    "RST",
+    "RPE",
+    "PCHL",
+    "JPE adr",
+    "XCHG",
+    "CPE adr",
+    "-",
+    "XRI D",
+    "RST",
+    "RP",
+    "POP PSW",
+    "JP adr",
+    "DI",
+    "CP adr",
+    "PUSH PSW",
+    "ORI D",
+    "RST",
+    "RM",
+    "SPHL",
+    "JM adr",
+    "EI",
+    "CM adr",
+    "-",
+    "CPI D",
+    "RST"
+};
+
 class Cpu8080 {
 
 public:
     Cpu8080();
     virtual ~Cpu8080();
+
+    bool init(uint8_t *memory, uint8_t *ports);
 
     void run_next_op(void);
 
@@ -69,8 +331,11 @@ public:
     uint8_t m_interrupts;
 
 
-    /* Memory */
-    uint8_t m_memory[ROM_SIZE + RAM_SIZE + VRAM_SIZE];
+    /* Pointer to system Memory */
+    uint8_t *m_memory;
+
+    /* Pointer to system ports */
+    uint8_t *m_ports;
 
     /*
      * Helper functions
@@ -109,108 +374,19 @@ public:
 //                                                          //
 //////////////////////////////////////////////////////////////
 
-    int op_call(void);
-    int op_ret (void);
-
-    int op_push_psw(void);
-    int op_push_b(void);
-    int op_push_d(void);
-    int op_push_h(void);
-
-    int op_pop_b(void);
-    int op_pop_d(void);
-    int op_pop_h(void);
-    int op_pop_psw(void);
-
-    int op_xchg(void);
-
-    int op_ei(void);
-
 //////////////////////////////////////////////////////////////
-//***************** Addition Operations ********************//
-//////////////////////////////////////////////////////////////
-
-    int op_inx_d(void);
-    int op_inx_h(void);
-
-    int do_dad(uint16_t num); // runs DAD num, returns how much to increment PC by
-    int op_dad_b(void);
-    int op_dad_d(void);
-    int op_dad_h(void);
-
-    int op_adi(void);
-
-//////////////////////////////////////////////////////////////
-//*************** Subtraction Operations *******************//
-//////////////////////////////////////////////////////////////
-
-    int op_dcr_b(void);
-    int op_dcr_c(void);
-
-//////////////////////////////////////////////////////////////
-//**************** Branching Operations ********************//
+//******************* JUMP Instructions ********************//
 //////////////////////////////////////////////////////////////
     int op_jmp(void);
-    int op_jnz(void);
 
 //////////////////////////////////////////////////////////////
-//****************** Memory Operations *********************//
+//**************** Immediate Instructions ******************//
 //////////////////////////////////////////////////////////////
-    int op_lxi_sp(void);
-    int op_lxi_b (void);
-    int op_lxi_d (void);
-    int op_lxi_h (void);
-
-    int op_ldax_d(void);
-    int op_lda   (void);
-
-    int op_mvi_a (void);
-    int op_mvi_b (void);
-    int op_mvi_c (void);
-    int op_mvi_h (void);
-    int op_mvi_m (void);
-
-    int op_mov_ad(void);
-    int op_mov_ae(void);
-
-    int op_mov_ma(void);
-    int op_mov_ha(void);
-    int op_mov_la(void);
-
-    int op_mov_am(void);
-    int op_mov_dm(void);
-    int op_mov_em(void);
-    int op_mov_hm(void);
-
-    int op_sta   (void);
-
-//////////////////////////////////////////////////////////////
-//*************** Conditional Operations *******************//
-//////////////////////////////////////////////////////////////
-    int op_cpi(void);
-
-//////////////////////////////////////////////////////////////
-//*************** Input/Output Operations ******************//
-//////////////////////////////////////////////////////////////
-    int op_out(void);
-
-//////////////////////////////////////////////////////////////
-//******************* Shift Operations *********************//
-//////////////////////////////////////////////////////////////
-    int op_rrc_a(void);
-
-//////////////////////////////////////////////////////////////
-//******************** AND Operations **********************//
-//////////////////////////////////////////////////////////////
-    int op_ani(void);
-
-    int op_ana_a(void);
-
-//////////////////////////////////////////////////////////////
-//******************** XOR Operations **********************//
-//////////////////////////////////////////////////////////////
-    int op_xra_a(void);
+    int op_lxi(void);
 
 };
 
 #endif /* SRC_CPU8080_H_ */
+
+
+

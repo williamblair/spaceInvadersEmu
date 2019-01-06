@@ -5,7 +5,7 @@
 #include <cstdio>
 #include <SDL/SDL.h>
 
-#include "Cpu8080.h"
+//#include "Cpu8080.h"
 
 #ifndef DISPLAY_H_INCLUDED
 #define DISPLAY_H_INCLUDED
@@ -17,7 +17,7 @@ public:
     Display(void);
     virtual ~Display(void);
 
-    bool init(const int w, const int h, const char *title, Cpu8080 *cpu);
+    bool init(const int w, const int h, uint8_t *memory, uint8_t *ports);
 
     void update(void);
 
@@ -25,7 +25,7 @@ private:
 
     uint8_t *m_memory; // pointer to board memory
 
-    Cpu8080 *m_cpu; // pointer to the CPU
+    uint8_t *m_ports; // pointer to the IN/OUT ports
 
     SDL_Surface *m_space_image; // the space invaders screen
 
