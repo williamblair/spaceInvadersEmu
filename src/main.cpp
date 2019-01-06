@@ -5,6 +5,7 @@
 #include <cstdio>
 
 #include "Cpu8080.h"
+#include "Display.h"
 
 /*
  * Links:
@@ -15,11 +16,16 @@
 int main(int argc, char *argv[])
 {
     Cpu8080 cpu;
+    Display display;
+
+    display.init(256, 224, "Hello World", cpu.m_memory);
 
 
     /* Main loop */
     for(;;) {
         cpu.run_next_op();
+
+        display.update();
     }
 
     return 0;
