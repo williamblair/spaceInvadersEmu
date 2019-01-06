@@ -49,6 +49,12 @@ public:
     uint8_t m_regD; uint8_t m_regE;   // called 'D' as a 16 bit pair
     uint8_t m_regH; uint8_t m_regL;   // called 'H' as a 16 bit pair
 
+    /* Shift Register */
+    uint16_t m_regShift;
+
+    /* Result shift for reading/writing to/from port 3 */
+    uint8_t m_port3_res;
+
     /* Flags (Status Register), technically should be a single char but this is easier */
     uint8_t m_flagS;
     uint8_t m_flagZ;

@@ -9,8 +9,8 @@ Cpu8080::Cpu8080() {
     m_pc = 0;
     m_sp = 2; // stack pointer is used by accessing the two indices below it
 
-    m_regA = 0;
-    m_regB = 0;
+    m_regA = 0; m_regPSW = 0;
+    m_regB = 0; m_regC = 0;
     m_regD = 0; m_regE = 0;
     m_regH = 0; m_regL = 0;
 
@@ -21,6 +21,9 @@ Cpu8080::Cpu8080() {
     m_flagAC = 0;
 
     m_interrupts = 0;
+
+    m_regShift = 0;
+    m_port3_res = 0;
 
     /* Load the space invaders rom into memory */
     memcpy(&m_memory[ROM_H_START], ROM_H, ROM_H_SIZE);
@@ -683,6 +686,35 @@ int Cpu8080::op_out(void)
     /* TODO - write the accumulator value to
      * that device port
      */
+
+    switch (device)
+    {
+        case 0x2:
+
+            /* Set the value */
+            /*
+             * When implementing IN, if reading from port 3, return this:
+             *    return (m_regShift >> (8 - m_port3_res)) & 0xFF;
+             */
+            m_port3_res = m_regA;
+
+            break;
+        case 0x4:
+
+            /* Shift the upper half into the lower half */
+            m_regShift >>= 8;
+
+            /* Copy the value into the upper half */
+            m_regShift |= (m_regA << 8);
+
+            break;
+
+        default:
+            printf("  Out: unhandled device\n");
+            break;
+    }
+
+    //exit(0);
 
     return 2;
 }
