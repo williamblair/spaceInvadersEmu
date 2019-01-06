@@ -57,10 +57,13 @@ void Cpu8080::run_next_op(void)
 
     switch (opcode)
     {
-        case 0x00:  num_increment = 1;        break; // NOP
+        case 0x00:  num_increment = 1;         break; // NOP
+        case 0x06:  num_increment = op_mvi();  break; // MVI B, D
 
-        case 0x31:  num_increment = op_lxi(); break; // LXI sp
-        case 0xC3:  num_increment = op_jmp(); break; // JMP adr
+        case 0x31:  num_increment = op_lxi();  break; // LXI sp
+        case 0xC3:  num_increment = op_jmp();  break; // JMP adr
+
+        case 0xCD:  num_increment = op_call(); break; // CALL adr
 
         /* Unhandled opcode, exit */
         default:    op_unimplemented(); break;
@@ -218,11 +221,88 @@ int Cpu8080::op_lxi(void)
     return 3;
 }
 
+int Cpu8080::op_mvi(void)
+{
+    /* The immediate value */
+    uint8_t byte2 = m_memory[m_pc+1];
 
+    /* Which register? */
+    uint8_t reg = (m_memory[m_pc] >> 3) & 0x7;
+    switch (reg)
+    {
+        /* B */
+        case 0:
+            m_regB = byte2;
+            break;
+        
+        /* C */
+        case 1:
+            m_regC = byte2;
+            break;
+        
+        /* D */
+        case 2:
+            m_regD = byte2;
+            break;
+        
+        /* E */
+        case 3:
+            m_regE = byte2;
+            break;
+        
+        /* H */
+        case 4:
+            m_regH = byte2;
+            break;
+        
+        /* L */
+        case 5:
+            m_regL = byte2;
+            break;
+        
+        /* M */
+        case 6:
+            m_memory[(m_regH << 8) | m_regL] = byte2;
+            break;
 
+        /* A */
+        case 7:
+            m_regA = byte2;
+            break;
 
+        default:
+            printf("  ** Invalid MVI Register **  \n"
+                   "     This shouldn't happen :( \n"
+                );
+            exit(0);
+    }
 
+    return 2;
+}
 
+//////////////////////////////////////////////////////////////
+//****************** Call Instructions *********************//
+//////////////////////////////////////////////////////////////
+
+int Cpu8080::op_call(void)
+{
+    /* Get the address to jump to */
+    uint8_t low  = m_memory[m_pc+1];
+    uint8_t high = m_memory[m_pc+2];
+    uint16_t addr = (high << 8) | low;
+
+    /* Store the next PC value on the stack */
+    uint16_t next_adr = m_pc + 3;
+    m_memory[m_sp - 1] = (next_adr >> 8) & 0xFF;
+    m_memory[m_sp - 2] = next_adr & 0xFF;
+    m_sp -= 2;
+
+    /* Move PC to the call addr */
+    m_pc = addr;
+
+    /* Don't Adjust the PC please */
+    return 0;
+}
 
 
 
