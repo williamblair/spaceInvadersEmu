@@ -22,6 +22,8 @@ Cpu8080::Cpu8080() {
 
     m_interrupts = 0;
 
+    m_port1 = 0;
+
     m_regShift = 0;
     m_port3_res = 0;
 

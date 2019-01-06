@@ -23,7 +23,7 @@ Display::~Display(void)
     }
 }
 
-bool Display::init(const int w, const int h, const char *title, uint8_t *memory)
+bool Display::init(const int w, const int h, const char *title, Cpu8080 *cpu)
 {
     // 256x224
 
@@ -31,7 +31,9 @@ bool Display::init(const int w, const int h, const char *title, uint8_t *memory)
 
     m_screen = SDL_SetVideoMode(w, h, 32, SDL_HWSURFACE);
 
-    m_memory = memory;
+    m_cpu = cpu;
+
+    m_memory = cpu->m_memory;
 
 
     m_space_image = SDL_CreateRGBSurface(
@@ -56,6 +58,56 @@ void Display::update(void)
         if (event.type == SDL_QUIT) {
             exit(0);
         }
+
+        if (event.type == SDL_KEYDOWN) {
+
+            switch (event.key.keysym.sym)
+            {
+                case SDLK_RETURN:
+                    printf("  Key Enter Down\n");
+                    m_cpu->m_port1 |= 0b00000100; // Set bit 2 or port 1 (1P Start)
+                    break;
+                case SDLK_LEFT:
+                    printf("  Key Left Down\n");
+                    m_cpu->m_port1 |= 0b00100000; // Set bit 5 of port 1 (1P Left)
+                    break;
+                case SDLK_RIGHT:
+                    printf("  Key Right Down\n");
+                    m_cpu->m_port1 |= 0b01000000; // Set bit 6 of port 1 (1P Right)
+                    break;
+                case SDLK_SPACE:
+                    printf("  Key Space Down\n");
+                    m_cpu->m_port1 |= 0b00010000; // Set bit 4 of port 1 (1P shoot)
+                default:
+                    break;
+            }
+
+        } // if (SDL_KEYDOWN)
+
+        else if (event.type == SDL_KEYUP) {
+
+            switch (event.key.keysym.sym)
+            {
+                case SDLK_RETURN:
+                    printf("  Key Enter Up\n");
+                    m_cpu->m_port1 &= ~0b00000100; // Clear bit 2 or port 1 (1P Start)
+                    break;
+                case SDLK_LEFT:
+                    printf("  Key Left Up\n");
+                    m_cpu->m_port1 &= ~0b00100000; // Clear bit 5 of port 1 (1P Left)
+                    break;
+                case SDLK_RIGHT:
+                    printf("  Key Right Up\n");
+                    m_cpu->m_port1 &= ~0b01000000; // Clear bit 6 of port 1 (1P Right)
+                    break;
+                case SDLK_SPACE:
+                    printf("  Key Space Up\n");
+                    m_cpu->m_port1 &= ~0b00010000; // Clear bit 4 of port 1 (1P shoot)
+                default:
+                    break;
+            }
+
+        } // else if (SDL_KEYUP)
     }
 
     SDL_Delay(1000.0f/30.0f);

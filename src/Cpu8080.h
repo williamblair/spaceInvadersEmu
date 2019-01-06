@@ -55,6 +55,9 @@ public:
     /* Result shift for reading/writing to/from port 3 */
     uint8_t m_port3_res;
 
+    /* Keyboard Port */
+    uint8_t m_port1;
+
     /* Flags (Status Register), technically should be a single char but this is easier */
     uint8_t m_flagS;
     uint8_t m_flagZ;

@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     Cpu8080 cpu;
     Display display;
 
-    display.init(256, 224, "Hello World", cpu.m_memory);
+    display.init(256, 224, "Hello World", &cpu);
 
 
     /* Main loop */
