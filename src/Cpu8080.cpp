@@ -63,6 +63,7 @@ void Cpu8080::run_next_op(void)
         case 0x1A:  num_increment = op_ldax(); break; // LDAX D
 
         case 0x21:  num_increment = op_lxi();  break; // LXI H, D8
+        case 0x23:  num_increment = op_inx();  break; // INX H
 
         case 0x31:  num_increment = op_lxi();  break; // LXI sp
 
@@ -401,6 +402,48 @@ int Cpu8080::op_mov(void)
 
     return 1;
 }
+
+
+//////////////////////////////////////////////////////////////
+//************** Register Pair Instructions ****************//
+//////////////////////////////////////////////////////////////
+
+int Cpu8080::op_inx(void)
+{
+    /* Which register pair? */
+    uint8_t reg = (m_memory[m_pc] >> 4) & 0x3;
+
+    /* Pointers to the register pair we want to increment */
+    uint8_t *p1 = NULL, *p2 = NULL;
+
+    switch (reg)
+    {
+        case 0: p1 = &m_regB; p2 = &m_regC; break; // BC
+        case 1: p1 = &m_regD; p2 = &m_regE; break; // DE
+        case 2: p1 = &m_regH; p2 = &m_regL; break; // HL
+        case 3: m_sp++;                     break; // sp
+        default:
+            printf("  ** Invalid INX Register Pair ** \n"
+                   "     This shouldn't happen :(     \n"
+                );
+            exit(0);
+    }
+
+    /* We don't do this part if the register pair is SP */
+    if (p1 != NULL) {
+
+        /* Get the total value and increment */
+        uint16_t val = (*p1 << 8) | *p2;
+        val++;
+
+        /* Re store in registers */
+        *p1 = (val >> 8) & 0xFF;
+        *p2 = val & 0xFF;
+    }
+
+    return 1;
+}
+
 
 
 
