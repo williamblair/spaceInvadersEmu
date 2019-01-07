@@ -58,9 +58,16 @@ void Cpu8080::run_next_op(void)
     switch (opcode)
     {
         case 0x00:  num_increment = 1;         break; // NOP
-        case 0x06:  num_increment = op_mvi();  break; // MVI B, D
+        case 0x06:  num_increment = op_mvi();  break; // MVI B, D8
+        case 0x11:  num_increment = op_lxi();  break; // LXI D, D8
+        case 0x1A:  num_increment = op_ldax(); break; // LDAX D
+
+        case 0x21:  num_increment = op_lxi();  break; // LXI H, D8
 
         case 0x31:  num_increment = op_lxi();  break; // LXI sp
+
+        case 0x77:  num_increment = op_mov();  break; // MOV M,A
+
         case 0xC3:  num_increment = op_jmp();  break; // JMP adr
 
         case 0xCD:  num_increment = op_call(); break; // CALL adr
@@ -304,10 +311,96 @@ int Cpu8080::op_call(void)
     return 0;
 }
 
+//////////////////////////////////////////////////////////////
+//************** Data Transfer Instructions ****************//
+//////////////////////////////////////////////////////////////
 
+int Cpu8080::op_ldax(void)
+{
+    uint16_t addr;
 
+    /* Which register? */
+    uint8_t reg = (m_memory[m_pc] >> 4) & 1;
 
+    /* BC */
+    if (reg == 0) {
+        addr = (m_regB << 8) | m_regC;
+    }
 
+    /* DE */
+    else {
+        addr = (m_regD << 8) | m_regE;
+    }
+
+    m_regA = m_memory[addr];
+
+    return 1;
+}
+
+int Cpu8080::op_mov(void)
+{
+    /* The source and destination registers */
+    uint8_t source = m_memory[m_pc] & 0x7;
+    uint8_t dest   = (m_memory[m_pc] >> 3) & 0x7;
+
+    uint8_t *src_reg; // where we're actually going to store the value
+    uint8_t *dst_reg;
+
+    switch (source)
+    {
+        case 0:            src_reg = &m_regB; break; // B
+        case 1:            src_reg = &m_regC; break; // C
+        case 2:            src_reg = &m_regD; break; // D
+        case 3:            src_reg = &m_regE; break; // E
+        case 4:            src_reg = &m_regH; break; // H
+        case 5:            src_reg = &m_regL; break; // L
+        
+        /* M */
+        case 6:
+            src_reg = &m_memory[(m_regH << 8) | m_regL];
+            break;
+
+        /* A */
+        case 7:
+            src_reg = &m_regA;
+            break;
+        default:
+            printf("  ** Invalid MOV source **    \n"
+                   "     This shouldn't happen :( \n"
+                );
+            exit(0);
+    }
+
+    switch (dest)
+    {
+        case 0:            dst_reg = &m_regB; break; // B
+        case 1:            dst_reg = &m_regC; break; // C
+        case 2:            dst_reg = &m_regD; break; // D
+        case 3:            dst_reg = &m_regE; break; // E
+        case 4:            dst_reg = &m_regH; break; // H
+        case 5:            dst_reg = &m_regL; break; // L
+        
+        /* M */
+        case 6:
+            dst_reg = &m_memory[(m_regH << 8) | m_regL];
+            break;
+
+        /* A */
+        case 7:
+            dst_reg = &m_regA;
+            break;
+        default:
+            printf("  ** Invalid MOV source **    \n"
+                   "     This shouldn't happen :( \n"
+                );
+            exit(0);
+    }
+
+    /* Finally, set the value */
+    *dst_reg = *src_reg;
+
+    return 1;
+}
 
 
 
