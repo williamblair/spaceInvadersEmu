@@ -68,12 +68,15 @@ void Cpu8080::run_next_op(void)
         case 0x23:  num_increment = op_inx();  break; // INX H
 
         case 0x31:  num_increment = op_lxi();  break; // LXI sp
+        case 0x3C:  num_increment = op_inr();  break; // INR A
+        case 0x3E:  num_increment = op_mvi();  break; // MVI A,D
 
         case 0x77:  num_increment = op_mov();  break; // MOV M,A
 
         case 0xC2:  num_increment = op_jnz();  break; // JNZ adr
         case 0xC3:  num_increment = op_jmp();  break; // JMP adr
 
+        case 0xC9:  num_increment = op_ret();  break; // RET
         case 0xCD:  num_increment = op_call(); break; // CALL adr
 
         /* Unhandled opcode, exit */
@@ -500,7 +503,60 @@ int Cpu8080::op_dcr(void)
     return 1;
 }
 
+int Cpu8080::op_inr(void)
+{
+    /* Which register? */
+    uint8_t reg = (m_memory[m_pc] >> 3) & 0x7;
 
+    /* Pointer to the register we want to increment */
+    uint8_t *regp = NULL;
+
+    switch (reg)
+    {
+        case 0: regp = &m_regB; break; // B
+        case 1: regp = &m_regC; break; // C
+        case 2: regp = &m_regD; break; // D
+        case 3: regp = &m_regE; break; // E
+        case 4: regp = &m_regH; break; // H
+        case 5: regp = &m_regL; break; // L
+        case 6: regp = &m_memory[(m_regH << 8) | m_regL]; break; // M
+        case 7: regp = &m_regA; break; // A
+        default:
+            printf("  ** Invalid DCR Register **  \n"
+                   "     This shouldn't happen :( \n"
+                );
+            exit(0);
+    }
+
+    /* Increment the register */
+    (*regp)++;
+
+    /* Set flags */
+    m_flagZ = (*regp == 0);
+    m_flagS = ((int8_t)(*regp) < 0);
+    m_flagP = !get_odd_parity(*regp);
+    // m_flagAC = // unimplemented
+
+    return 1;
+}
+
+//////////////////////////////////////////////////////////////
+//********** Return from Subroutine Instructions ***********//
+//////////////////////////////////////////////////////////////
+int Cpu8080::op_ret(void)
+{
+    /* Get the next instruction stored on the stack */
+    uint8_t low  = m_memory[m_sp];
+    uint8_t high = m_memory[m_sp+1];
+
+    m_pc = m_memory[(high << 8) | low];
+
+    /* Increment the stack pointer */
+    m_sp += 2;
+
+    /* Don't increment PC please */
+    return 0;
+}
 
 
 
