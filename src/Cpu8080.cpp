@@ -65,18 +65,22 @@ void Cpu8080::run_next_op(void)
         case 0x06:  num_increment = op_mvi();  break; // MVI B, D8
         case 0x0E:  num_increment = op_mvi();  break; // MVI C, D8
         case 0x11:  num_increment = op_lxi();  break; // LXI D, D8
+        case 0x19:  num_increment = op_dad();  break; // DAD D
         case 0x13:  num_increment = op_inx();  break; // INX D
         case 0x1A:  num_increment = op_ldax(); break; // LDAX D
 
         case 0x21:  num_increment = op_lxi();  break; // LXI H, D8
         case 0x23:  num_increment = op_inx();  break; // INX H
         case 0x26:  num_increment = op_mvi();  break; // MVI H,D8
+        case 0x29:  num_increment = op_dad();  break; // DAD H
 
         case 0x31:  num_increment = op_lxi();  break; // LXI sp
         case 0x32:  num_increment = op_sta();  break; // STA adr
         case 0x36:  num_increment = op_mvi();  break; // MVI M,D8
         case 0x3C:  num_increment = op_inr();  break; // INR A
         case 0x3E:  num_increment = op_mvi();  break; // MVI A,D8
+
+        case 0x6F:  num_increment = op_mov();  break; // MOV L,A
 
         case 0x77:  num_increment = op_mov();  break; // MOV M,A
         case 0x7C:  num_increment = op_mov();  break; // MOV A,H
@@ -493,11 +497,6 @@ int Cpu8080::op_inx(void)
 
 int Cpu8080::op_push(void)
 {
-    /*
-    ((SP)-1)+-(RP1). ((SP)-2)+-(RP2).   Save RP on the stack
-    (SP) +- (SP)-2 RP=PSW               saves accumulator and condition bits
-    */
-
     /* Which register? */
     uint8_t reg = (m_memory[m_pc] >> 4) & 0x3;
 
@@ -539,6 +538,54 @@ int Cpu8080::op_push(void)
 
     /* Decrement the stack pointer */
     m_sp -= 2;
+
+    return 1;
+}
+
+int Cpu8080::op_dad(void)
+{
+    /* Which register pair? */
+    uint8_t reg = (m_memory[m_pc] >> 4) & 0x3;
+
+    /* Pointers for the two registers, plus the
+     * combined value we're going to increment
+     */
+    uint8_t *p1 = NULL, *p2 = NULL;
+    uint16_t pair;
+
+    switch (reg)
+    {
+        case 0: p1 = &m_regB; p2 = &m_regC; break; // BC
+        case 1: p1 = &m_regD; p2 = &m_regE; break; // DE
+        case 2: p1 = &m_regH; p2 = &m_regL; break; // HL
+
+        /* SP */
+        case 3:
+            m_flagC = (0xFFFF - m_sp) < m_sp;
+            m_sp += m_sp;
+
+            break;
+
+        default:
+            printf("  ** Invalid DAD Register Pair ** \n"
+                   "     This shouldn't happen :(     \n"
+                );
+            exit(0);
+            
+    }
+
+    /* If the pair wasn't SP... */
+    if (p1 != NULL) {
+
+        /* Get the value and set carry if it will occur */
+        pair = (*p1 << 8) | *p2;
+        m_flagC = (0xFFFF - pair) < pair;
+        pair += pair;
+
+        /* Store it back in the two registers */
+        *p1 = (pair >> 8) & 0xFF;
+        *p2 = pair & 0xFF;
+    }
 
     return 1;
 }
