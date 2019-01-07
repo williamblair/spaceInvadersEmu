@@ -58,8 +58,10 @@ void Cpu8080::run_next_op(void)
     switch (opcode)
     {
         case 0x00:  num_increment = 1;         break; // NOP
+        case 0x05:  num_increment = op_dcr();  break; // DCR B
         case 0x06:  num_increment = op_mvi();  break; // MVI B, D8
         case 0x11:  num_increment = op_lxi();  break; // LXI D, D8
+        case 0x13:  num_increment = op_inx();  break; // INX D
         case 0x1A:  num_increment = op_ldax(); break; // LDAX D
 
         case 0x21:  num_increment = op_lxi();  break; // LXI H, D8
@@ -443,6 +445,50 @@ int Cpu8080::op_inx(void)
 
     return 1;
 }
+
+//////////////////////////////////////////////////////////////
+//************* Single Register Instructions ***************//
+//////////////////////////////////////////////////////////////
+
+int Cpu8080::op_dcr(void)
+{
+    /* Which register? */
+    uint8_t reg = (m_memory[m_pc] >> 3) & 0x7;
+
+    /* Pointer to the register we want to decrement */
+    uint8_t *regp = NULL;
+
+    switch (reg)
+    {
+        case 0: regp = &m_regB; break; // B
+        case 1: regp = &m_regC; break; // C
+        case 2: regp = &m_regD; break; // D
+        case 3: regp = &m_regE; break; // E
+        case 4: regp = &m_regH; break; // H
+        case 5: regp = &m_regL; break; // L
+        case 6: regp = &m_memory[(m_regH << 8) | m_regL]; break; // M
+        case 7: regp = &m_regA; break; // A
+        default:
+            printf("  ** Invalid DCR Register **  \n"
+                   "     This shouldn't happen :( \n"
+                );
+            exit(0);
+            
+    }
+
+    /* Decrement the register */
+    (*regp)--;
+
+    /* Set flags */
+    m_flagZ = (*regp == 0);
+    m_flagS = ((int8_t)(*regp) < 0);
+    m_flagP = !get_odd_parity(*regp);
+    // m_flagAC = // unimplemented
+
+    return 1;
+}
+
+
 
 
 
