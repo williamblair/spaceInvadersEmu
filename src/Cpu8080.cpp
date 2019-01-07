@@ -68,6 +68,7 @@ void Cpu8080::run_next_op(void)
         case 0x23:  num_increment = op_inx();  break; // INX H
 
         case 0x31:  num_increment = op_lxi();  break; // LXI sp
+        case 0x32:  num_increment = op_sta();  break; // STA adr
         case 0x3C:  num_increment = op_inr();  break; // INR A
         case 0x3E:  num_increment = op_mvi();  break; // MVI A,D
 
@@ -549,7 +550,7 @@ int Cpu8080::op_ret(void)
     uint8_t low  = m_memory[m_sp];
     uint8_t high = m_memory[m_sp+1];
 
-    m_pc = m_memory[(high << 8) | low];
+    m_pc = (high << 8) | low;
 
     /* Increment the stack pointer */
     m_sp += 2;
@@ -558,6 +559,21 @@ int Cpu8080::op_ret(void)
     return 0;
 }
 
+//////////////////////////////////////////////////////////////
+//************* Direct Addressing Instructions *************//
+//////////////////////////////////////////////////////////////
+int Cpu8080::op_sta(void)
+{
+    /* Get the address to write A to */
+    uint8_t low  = m_memory[m_pc+1];
+    uint8_t high = m_memory[m_pc+2];
+    uint16_t addr = (high << 8) | low;
+
+    /* Write A to said addr */
+    m_memory[addr] = m_regA;
+
+    return 3;
+}
 
 
 
