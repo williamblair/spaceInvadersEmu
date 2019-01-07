@@ -71,6 +71,7 @@ void Cpu8080::run_next_op(void)
 
         case 0x77:  num_increment = op_mov();  break; // MOV M,A
 
+        case 0xC2:  num_increment = op_jnz();  break; // JNZ adr
         case 0xC3:  num_increment = op_jmp();  break; // JMP adr
 
         case 0xCD:  num_increment = op_call(); break; // CALL adr
@@ -182,6 +183,17 @@ int Cpu8080::op_jmp(void)
 
     /* DON't adjust the PC at all please */
     return 0;
+}
+
+int Cpu8080::op_jnz(void)
+{
+    if (m_flagZ == 0) {
+
+        return op_jmp();
+
+    }
+
+    return 3;
 }
 
 
