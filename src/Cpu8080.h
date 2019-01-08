@@ -314,8 +314,8 @@ public:
     /* Shift Register */
     uint16_t m_regShift;
 
-    /* Result shift for reading/writing to/from port 3 */
-    uint8_t m_port3_res;
+    /* Result shift for reading from port 3 / writing to port2 */
+    uint8_t m_shiftAmount;
 
     /* Keyboard Port */
     uint8_t m_port1;
@@ -392,6 +392,7 @@ public:
 //****************** Call Instructions *********************//
 //////////////////////////////////////////////////////////////
     int op_call(void);
+    int op_cnz(void);
 
 //////////////////////////////////////////////////////////////
 //************** Data Transfer Instructions ****************//
@@ -426,6 +427,7 @@ public:
 //************* Direct Addressing Instructions *************//
 //////////////////////////////////////////////////////////////
     int op_sta(void);
+    int op_lhld(void);
 
 //////////////////////////////////////////////////////////////
 //************** Input/Output Instructions *****************//
@@ -436,6 +438,11 @@ public:
 //************ Rotate Accumulator Instructions *************//
 //////////////////////////////////////////////////////////////
     int op_rlc(void);
+
+//////////////////////////////////////////////////////////////
+//******* Register/Memory to Accumulator Instructions ******//
+//////////////////////////////////////////////////////////////
+    int op_ana(void);
 
 };
 

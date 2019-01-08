@@ -27,7 +27,7 @@ Cpu8080::Cpu8080() {
     m_port1 = 0;
 
     m_regShift = 0;
-    m_port3_res = 0;
+    m_shiftAmount= 0;
 
     m_memory = NULL;
 
@@ -70,12 +70,14 @@ void Cpu8080::run_next_op(void)
         case 0x11:  num_increment = op_lxi();  break; // LXI D, D8
         case 0x19:  num_increment = op_dad();  break; // DAD D
         case 0x13:  num_increment = op_inx();  break; // INX D
+        case 0x16:  num_increment = op_mvi();  break; // MVI D, D8
         case 0x1A:  num_increment = op_ldax(); break; // LDAX D
 
         case 0x21:  num_increment = op_lxi();  break; // LXI H, D8
         case 0x23:  num_increment = op_inx();  break; // INX H
         case 0x26:  num_increment = op_mvi();  break; // MVI H,D8
         case 0x29:  num_increment = op_dad();  break; // DAD H
+        case 0x2A:  num_increment = op_lhld(); break; // LHLD adr
 
         case 0x31:  num_increment = op_lxi();  break; // LXI sp
         case 0x32:  num_increment = op_sta();  break; // STA adr
@@ -83,13 +85,20 @@ void Cpu8080::run_next_op(void)
         case 0x3C:  num_increment = op_inr();  break; // INR A
         case 0x3E:  num_increment = op_mvi();  break; // MVI A,D8
 
+        case 0x5F:  num_increment = op_mov();  break; // MOV E,A
+
         case 0x6F:  num_increment = op_mov();  break; // MOV L,A
 
         case 0x77:  num_increment = op_mov();  break; // MOV M,A
+        case 0x78:  num_increment = op_mov();  break; // MOV A,B
         case 0x7C:  num_increment = op_mov();  break; // MOV A,H
+        case 0x7D:  num_increment = op_mov();  break; // MOV A,L
+
+        case 0xA7:  num_increment = op_ana();  break; // ANA A
 
         case 0xC1:  num_increment = op_pop();  break; // POP B
         case 0xC2:  num_increment = op_jnz();  break; // JNZ adr
+        case 0xC4:  num_increment = op_cnz();  break; // CNZ adr
         case 0xC3:  num_increment = op_jmp();  break; // JMP adr
         case 0xC5:  num_increment = op_push(); break; // PUSH B
         case 0xC9:  num_increment = op_ret();  break; // RET
@@ -390,6 +399,15 @@ int Cpu8080::op_call(void)
 
     /* Don't Adjust the PC please */
     return 0;
+}
+
+int Cpu8080::op_cnz(void)
+{
+    if (m_flagZ == 0) {
+        return op_call();
+    }
+
+    return 3;
 }
 
 //////////////////////////////////////////////////////////////
@@ -795,6 +813,20 @@ int Cpu8080::op_sta(void)
     return 3;
 }
 
+int Cpu8080::op_lhld(void)
+{
+    /* Get the address */
+    uint8_t low  = m_memory[m_pc+1];
+    uint8_t high = m_memory[m_pc+2];
+    uint16_t addr = (high << 8) | low;
+
+    /* Replace H and L */
+    m_regH = m_memory[addr+1];
+    m_regL = m_memory[addr];
+
+    return 3;
+}
+
 //////////////////////////////////////////////////////////////
 //************** Input/Output Instructions *****************//
 //////////////////////////////////////////////////////////////
@@ -808,6 +840,11 @@ int Cpu8080::op_out(void)
         case 0x6:
             printf("  OUT: writing to watchdog (0x6)\n");
             m_ports[0x6] = 1;
+            break;
+
+        case 0x2:
+            printf("  OUT: writing to port 2 (shift amount): 0x%X\n", m_regA);
+            m_shiftAmount = m_regA;
             break;
 
         default:
@@ -834,6 +871,48 @@ int Cpu8080::op_rlc(void)
     
     return 1;
 }
+
+
+//////////////////////////////////////////////////////////////
+//******* Register/Memory to Accumulator Instructions ******//
+//////////////////////////////////////////////////////////////
+int Cpu8080::op_ana(void)
+{
+    /* Which register? */
+    uint8_t reg = m_memory[m_pc] & 0x7;
+    uint8_t *regp = NULL;
+
+    switch (reg)
+    {
+        case 0: regp = &m_regB; break; // B
+        case 1: regp = &m_regC; break; // C
+        case 2: regp = &m_regD; break; // D
+        case 3: regp = &m_regE; break; // E
+        case 4: regp = &m_regH; break; // H
+        case 5: regp = &m_regL; break; // L
+        case 6: regp = &m_memory[(m_regH << 8) | m_regL]; break; // M
+        case 7: regp = &m_regA; break; // A
+
+        default:
+            printf("  Unhandled ANA Register: 0x%X\n", reg);
+            exit(0);
+    }
+
+    /* AND */
+    uint8_t res = m_regA & *regp;
+
+    /* Set flags */
+    m_flagC = 0; // carry bit is reset to 0
+    m_flagZ = (res == 0);
+    m_flagS = ((int8_t)res < 0);
+    m_flagP = !get_odd_parity(res);
+
+    /* Store the result in A */
+    m_regA = res;
+
+    return 1;
+}
+
 
 
 
