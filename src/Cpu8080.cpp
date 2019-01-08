@@ -61,8 +61,11 @@ void Cpu8080::run_next_op(void)
     switch (opcode)
     {
         case 0x00:  num_increment = 1;         break; // NOP
+        case 0x01:  num_increment = op_lxi();  break; // LXI B,D
         case 0x05:  num_increment = op_dcr();  break; // DCR B
         case 0x06:  num_increment = op_mvi();  break; // MVI B, D8
+        case 0x07:  num_increment = op_rlc();  break; // RLC
+        case 0x09:  num_increment = op_dad();  break; // DAD B
         case 0x0E:  num_increment = op_mvi();  break; // MVI C, D8
         case 0x11:  num_increment = op_lxi();  break; // LXI D, D8
         case 0x19:  num_increment = op_dad();  break; // DAD D
@@ -85,16 +88,19 @@ void Cpu8080::run_next_op(void)
         case 0x77:  num_increment = op_mov();  break; // MOV M,A
         case 0x7C:  num_increment = op_mov();  break; // MOV A,H
 
+        case 0xC1:  num_increment = op_pop();  break; // POP B
         case 0xC2:  num_increment = op_jnz();  break; // JNZ adr
         case 0xC3:  num_increment = op_jmp();  break; // JMP adr
-
+        case 0xC5:  num_increment = op_push(); break; // PUSH B
         case 0xC9:  num_increment = op_ret();  break; // RET
         case 0xCD:  num_increment = op_call(); break; // CALL adr
 
+        case 0xD3:  num_increment = op_out();  break; // OUT
         case 0xD5:  num_increment = op_push(); break; // PUSH D
 
         case 0xE1:  num_increment = op_pop();  break; // POP H
         case 0xE5:  num_increment = op_push(); break; // PUSH H
+        case 0xE6:  num_increment = op_ani();  break; // ANI D8
         case 0xEB:  num_increment = op_xchg(); break; // XCHG
 
         case 0xFE:  num_increment = op_cpi();  break; // CPI D8
@@ -337,6 +343,27 @@ int Cpu8080::op_cpi(void)
                ((int8_t)m_regA < 0 && (int8_t) res > 0));
     m_flagP = !get_odd_parity(res);
     // m_flagAC = // unimplemented
+
+    return 2;
+}
+
+int Cpu8080::op_ani(void)
+{
+    /* Get the data to add */
+    uint8_t val = m_memory[m_pc+1];
+
+    /* add the values */
+    uint8_t res = m_regA & val;
+
+
+    /* Set flags */
+    m_flagC = 0; // the carry flag is reset to 0
+    m_flagS = ((int8_t)res < 0);
+    m_flagZ = (res == 0); // according to docs, 'the zero bit will be set if and only if the low-order four bits were originally 0'
+    m_flagP = !get_odd_parity(res);
+
+    /* store back in A */
+    m_regA = res;
 
     return 2;
 }
@@ -768,6 +795,45 @@ int Cpu8080::op_sta(void)
     return 3;
 }
 
+//////////////////////////////////////////////////////////////
+//************** Input/Output Instructions *****************//
+//////////////////////////////////////////////////////////////
+int Cpu8080::op_out(void)
+{
+    /* Which device? */
+    uint8_t device = m_memory[m_pc+1];
+
+    switch (device)
+    {
+        case 0x6:
+            printf("  OUT: writing to watchdog (0x6)\n");
+            m_ports[0x6] = 1;
+            break;
+
+        default:
+            printf("  Unhandled OUT Device: 0x%X\n", device);
+            exit(0);
+    }
+
+    return 2;
+}
+
+//////////////////////////////////////////////////////////////
+//************ Rotate Accumulator Instructions *************//
+//////////////////////////////////////////////////////////////
+int Cpu8080::op_rlc(void)
+{
+    /* Carry Bit = high order bit of accumulator */
+    m_flagC = (m_regA >> 7) & 1;
+
+    /* Left shift the accumulator */
+    m_regA <<= 1;
+
+    /* Set lowest bit of accumulator to carry */
+    m_regA |= m_flagC & 1;
+    
+    return 1;
+}
 
 
 
