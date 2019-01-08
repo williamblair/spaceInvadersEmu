@@ -93,7 +93,9 @@ void Cpu8080::run_next_op(void)
 
         case 0xD5:  num_increment = op_push(); break; // PUSH D
 
+        case 0xE1:  num_increment = op_pop();  break; // POP H
         case 0xE5:  num_increment = op_push(); break; // PUSH H
+        case 0xEB:  num_increment = op_xchg(); break; // XCHG
 
         case 0xFE:  num_increment = op_cpi();  break; // CPI D8
 
@@ -542,6 +544,55 @@ int Cpu8080::op_push(void)
     return 1;
 }
 
+int Cpu8080::op_pop(void)
+{
+    /* Which register? */
+    uint8_t reg = (m_memory[m_pc] >> 4) & 0x3;
+    uint8_t psw;
+
+    switch (reg)
+    {
+        /* BC */
+        case 0:
+            m_regB = m_memory[m_sp+1];
+            m_regC = m_memory[m_sp];
+            break;
+
+        /* DE */
+        case 1:
+            m_regD = m_memory[m_sp+1];
+            m_regE = m_memory[m_sp];
+            break;
+
+        /* HL */
+        case 2:
+            m_regH = m_memory[m_sp+1];
+            m_regL = m_memory[m_sp];
+            break;
+
+        /* A/PSW */
+        case 3:
+            m_regB = m_memory[m_sp+1];
+            psw    = m_memory[m_sp];
+            
+            m_flagC  = psw & 1;
+            m_flagP  = (psw >> 2) & 1;
+            m_flagAC = (psw >> 4) & 1;
+            m_flagZ  = (psw >> 6) & 1;
+            m_flagS  = (psw >> 7) & 1;
+
+            break;
+
+        default:
+            printf("  ** Invalid POP Register Pair ** \n"
+                   "     This shouldn't happen :(     \n"
+                );
+            exit(0);
+    }
+
+    return 1;
+}
+
 int Cpu8080::op_dad(void)
 {
     /* Which register pair? */
@@ -586,6 +637,20 @@ int Cpu8080::op_dad(void)
         *p1 = (pair >> 8) & 0xFF;
         *p2 = pair & 0xFF;
     }
+
+    return 1;
+}
+
+int Cpu8080::op_xchg(void)
+{
+    uint8_t tempH = m_regH;
+    uint8_t tempL = m_regL;
+
+    m_regH = m_regD;
+    m_regL = m_regE;
+
+    m_regD = tempH;
+    m_regE = tempL;
 
     return 1;
 }

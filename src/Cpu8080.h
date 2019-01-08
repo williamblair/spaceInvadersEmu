@@ -404,8 +404,11 @@ public:
     int op_inx(void);
 
     int op_push(void);
+    int op_pop (void);
 
     int op_dad (void);
+
+    int op_xchg(void);
 
 //////////////////////////////////////////////////////////////
 //************* Single Register Instructions ***************//
