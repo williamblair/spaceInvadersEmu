@@ -387,6 +387,7 @@ public:
     int op_mvi(void);
     int op_cpi(void);
     int op_ani(void);
+    int op_ori(void);
 
 //////////////////////////////////////////////////////////////
 //****************** Call Instructions *********************//
@@ -438,6 +439,7 @@ public:
 //************ Rotate Accumulator Instructions *************//
 //////////////////////////////////////////////////////////////
     int op_rlc(void);
+    int op_rar(void);
 
 //////////////////////////////////////////////////////////////
 //******* Register/Memory to Accumulator Instructions ******//

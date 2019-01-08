@@ -66,12 +66,14 @@ void Cpu8080::run_next_op(void)
         case 0x06:  num_increment = op_mvi();  break; // MVI B, D8
         case 0x07:  num_increment = op_rlc();  break; // RLC
         case 0x09:  num_increment = op_dad();  break; // DAD B
+        case 0x0D:  num_increment = op_dcr();  break; // DCR C
         case 0x0E:  num_increment = op_mvi();  break; // MVI C, D8
         case 0x11:  num_increment = op_lxi();  break; // LXI D, D8
         case 0x19:  num_increment = op_dad();  break; // DAD D
         case 0x13:  num_increment = op_inx();  break; // INX D
         case 0x16:  num_increment = op_mvi();  break; // MVI D, D8
         case 0x1A:  num_increment = op_ldax(); break; // LDAX D
+        case 0x1F:  num_increment = op_rar();  break; // RAR
 
         case 0x21:  num_increment = op_lxi();  break; // LXI H, D8
         case 0x23:  num_increment = op_inx();  break; // INX H
@@ -87,6 +89,7 @@ void Cpu8080::run_next_op(void)
 
         case 0x5F:  num_increment = op_mov();  break; // MOV E,A
 
+        case 0x67:  num_increment = op_mov();  break; // MOV H,A
         case 0x6F:  num_increment = op_mov();  break; // MOV L,A
 
         case 0x77:  num_increment = op_mov();  break; // MOV M,A
@@ -104,6 +107,7 @@ void Cpu8080::run_next_op(void)
         case 0xC9:  num_increment = op_ret();  break; // RET
         case 0xCD:  num_increment = op_call(); break; // CALL adr
 
+        case 0xD1:  num_increment = op_pop();  break; // POP D
         case 0xD3:  num_increment = op_out();  break; // OUT
         case 0xD5:  num_increment = op_push(); break; // PUSH D
 
@@ -112,6 +116,7 @@ void Cpu8080::run_next_op(void)
         case 0xE6:  num_increment = op_ani();  break; // ANI D8
         case 0xEB:  num_increment = op_xchg(); break; // XCHG
 
+        case 0xF6:  num_increment = op_ori();  break; // ORI D
         case 0xFE:  num_increment = op_cpi();  break; // CPI D8
 
         /* Unhandled opcode, exit */
@@ -377,6 +382,23 @@ int Cpu8080::op_ani(void)
     return 2;
 }
 
+int Cpu8080::op_ori(void)
+{
+    /* OR */
+    uint8_t res = m_regA | m_memory[m_pc+1];
+
+    /* Set flags */
+    m_regC = 0; // the carry flag is reset
+    m_flagZ = (res == 0);
+    m_flagS = ((int8_t)res < 0);
+    m_flagP = !get_odd_parity(res);
+
+    /* Store the result */
+    m_regA = res;
+
+    return 2;
+}
+
 //////////////////////////////////////////////////////////////
 //****************** Call Instructions *********************//
 //////////////////////////////////////////////////////////////
@@ -617,8 +639,8 @@ int Cpu8080::op_pop(void)
 
         /* A/PSW */
         case 3:
-            m_regB = m_memory[m_sp+1];
-            psw    = m_memory[m_sp];
+            m_regA = m_memory[m_sp];
+            psw    = m_memory[m_sp+1]; // according to docs, for some reason the +1 here is switched
             
             m_flagC  = psw & 1;
             m_flagP  = (psw >> 2) & 1;
@@ -634,6 +656,8 @@ int Cpu8080::op_pop(void)
                 );
             exit(0);
     }
+
+    m_sp += 2;
 
     return 1;
 }
@@ -872,6 +896,19 @@ int Cpu8080::op_rlc(void)
     return 1;
 }
 
+int Cpu8080::op_rar(void)
+{
+    /* Carry bit - low order bit of accumulator */
+    m_flagC = m_regA & 1;
+
+    /* Right shift the accumulator */
+    m_regA >>= 1;
+
+    /* Set the highest bit of the accumulator to carry */
+    m_regA |= m_flagC << 7;
+
+    return 1;
+}
 
 //////////////////////////////////////////////////////////////
 //******* Register/Memory to Accumulator Instructions ******//
