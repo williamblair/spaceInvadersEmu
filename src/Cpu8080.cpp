@@ -161,6 +161,28 @@ void Cpu8080::run_next_op(void)
         case 0x84:  num_increment = op_add();  break; // ADD H
         case 0x85:  num_increment = op_add();  break; // ADD L
         case 0x87:  num_increment = op_add();  break; // ADD A
+        case 0x88:  num_increment = op_adc();  break; // ADC B
+        case 0x89:  num_increment = op_adc();  break; // ADC C
+        case 0x8A:  num_increment = op_adc();  break; // ADC D
+        case 0x8B:  num_increment = op_adc();  break; // ADC E
+        case 0x8C:  num_increment = op_adc();  break; // ADC H
+        case 0x8D:  num_increment = op_adc();  break; // ADC L
+        case 0x8F:  num_increment = op_adc();  break; // ADC A
+
+        case 0x90:  num_increment = op_sub();  break; // SUB B
+        case 0x91:  num_increment = op_sub();  break; // SUB C
+        case 0x92:  num_increment = op_sub();  break; // SUB D
+        case 0x93:  num_increment = op_sub();  break; // SUB E
+        case 0x94:  num_increment = op_sub();  break; // SUB H
+        case 0x95:  num_increment = op_sub();  break; // SUB L
+        case 0x97:  num_increment = op_sub();  break; // SUB A
+        case 0x98:  num_increment = op_sbb();  break; // SBB B
+        case 0x99:  num_increment = op_sbb();  break; // SBB C
+        case 0x9A:  num_increment = op_sbb();  break; // SBB D
+        case 0x9B:  num_increment = op_sbb();  break; // SBB E
+        case 0x9C:  num_increment = op_sbb();  break; // SBB H
+        case 0x9D:  num_increment = op_sbb();  break; // SBB L
+        case 0x9F:  num_increment = op_sbb();  break; // SBB A
 
         case 0xA7:  num_increment = op_ana();  break; // ANA A
         case 0xAF:  num_increment = op_xra();  break; // XRA A
@@ -1465,6 +1487,120 @@ int Cpu8080::op_add(void)
 
     /* Set flags */
     m_flagC = (res < m_regA); // implies overflow
+    m_flagZ = (res == 0);
+    m_flagS = ((int8_t)res < 0);
+    m_flagP = !get_odd_parity(res);
+    // m_flagAC = // unimplemented
+
+    /* Store the result */
+    m_regA = res;
+
+    return 1;
+}
+
+int Cpu8080::op_adc(void)
+{
+    /* Which register? */
+    uint8_t reg = m_memory[m_pc] & 0x7;
+    uint8_t *regp = NULL;
+
+    switch (reg)
+    {
+        case 0: regp = &m_regB; break; // B
+        case 1: regp = &m_regC; break; // C
+        case 2: regp = &m_regD; break; // D
+        case 3: regp = &m_regE; break; // E
+        case 4: regp = &m_regH; break; // H
+        case 5: regp = &m_regL; break; // L
+        case 6: regp = &m_memory[(m_regH << 8) | m_regL]; break; // M
+        case 7: regp = &m_regA; break; // A
+
+        default:
+            printf("  Unhandled ADD Register: 0x%X\n", reg);
+            exit(0);
+    }
+
+    /* ADD  + carry bit */
+    uint8_t res = m_regA + *regp + m_flagC;
+
+    /* Set flags */
+    m_flagC = (res < m_regA); // implies overflow
+    m_flagZ = (res == 0);
+    m_flagS = ((int8_t)res < 0);
+    m_flagP = !get_odd_parity(res);
+    // m_flagAC = // unimplemented
+
+    /* Store the result */
+    m_regA = res;
+
+    return 1;
+}
+
+int Cpu8080::op_sub(void)
+{
+    /* Which register? */
+    uint8_t reg = m_memory[m_pc] & 0x7;
+    uint8_t *regp = NULL;
+
+    switch (reg)
+    {
+        case 0: regp = &m_regB; break; // B
+        case 1: regp = &m_regC; break; // C
+        case 2: regp = &m_regD; break; // D
+        case 3: regp = &m_regE; break; // E
+        case 4: regp = &m_regH; break; // H
+        case 5: regp = &m_regL; break; // L
+        case 6: regp = &m_memory[(m_regH << 8) | m_regL]; break; // M
+        case 7: regp = &m_regA; break; // A
+
+        default:
+            printf("  Unhandled ADD Register: 0x%X\n", reg);
+            exit(0);
+    }
+
+    /* SUB */
+    uint8_t res = m_regA - *regp;
+
+    /* Set flags */
+    m_flagC = (res < m_regA); // if there is NO carry out, the carry bit is SET; otherwise reset. this is the opposite of add operation)
+    m_flagZ = (res == 0);
+    m_flagS = ((int8_t)res < 0);
+    m_flagP = !get_odd_parity(res);
+    // m_flagAC = // unimplemented
+
+    /* Store the result */
+    m_regA = res;
+
+    return 1;
+}
+
+int Cpu8080::op_sbb(void)
+{
+    /* Which register? */
+    uint8_t reg = m_memory[m_pc] & 0x7;
+    uint8_t *regp = NULL;
+
+    switch (reg)
+    {
+        case 0: regp = &m_regB; break; // B
+        case 1: regp = &m_regC; break; // C
+        case 2: regp = &m_regD; break; // D
+        case 3: regp = &m_regE; break; // E
+        case 4: regp = &m_regH; break; // H
+        case 5: regp = &m_regL; break; // L
+        case 6: regp = &m_memory[(m_regH << 8) | m_regL]; break; // M
+        case 7: regp = &m_regA; break; // A
+
+        default:
+            printf("  Unhandled ADD Register: 0x%X\n", reg);
+            exit(0);
+    }
+
+    /* SUB with carry flag */
+    uint8_t res = m_regA - *regp - m_flagC;
+
+    /* Set flags */
+    m_flagC = (res < m_regA); // if there is NO carry out, the carry bit is SET; otherwise reset. this is the opposite of add operation)
     m_flagZ = (res == 0);
     m_flagS = ((int8_t)res < 0);
     m_flagP = !get_odd_parity(res);

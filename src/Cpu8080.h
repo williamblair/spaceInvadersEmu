@@ -475,6 +475,9 @@ public:
 //******* Register/Memory to Accumulator Instructions ******//
 //////////////////////////////////////////////////////////////
     int op_add(void);
+    int op_adc(void);
+    int op_sub(void);
+    int op_sbb(void);
     int op_ana(void);
     int op_xra(void);
 
