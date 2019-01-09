@@ -117,6 +117,7 @@ void Cpu8080::run_next_op(void)
         case 0xC6:  num_increment = op_adi();  break; // ADI D8
         case 0xC9:  num_increment = op_ret();  break; // RET
         case 0xCA:  num_increment = op_jz();   break; // JZ adr
+        case 0xCE:  num_increment = op_aci();  break; // ACI D8
 
         case 0xCD:
 #ifdef CPU_DIAG
@@ -168,7 +169,9 @@ void Cpu8080::run_next_op(void)
         case 0xD2:  num_increment = op_jnc();  break; // JNC adr
         case 0xD3:  num_increment = op_out();  break; // OUT
         case 0xD5:  num_increment = op_push(); break; // PUSH D
+        case 0xD6:  num_increment = op_sui();  break; // SUI D8
         case 0xDA:  num_increment = op_jc();   break; // JC adr
+        case 0xDE:  num_increment = op_sbi();  break; // SBI D8
 
         case 0xE1:  num_increment = op_pop();  break; // POP H
         case 0xE2:  num_increment = op_jpo();  break; // JPO adr
@@ -208,10 +211,10 @@ void Cpu8080::run_next_op(void)
             (m_regH << 8) | m_regL,
             m_pc,
             m_sp,
-            '.',
+            m_flagC ? 'c' : '.',
             m_flagS ? 's' : '.',
             m_flagP ? 'p' : '.',
-            '.'
+            m_flagZ ? 'z' : '.'
         );
 
     //getchar();
@@ -517,10 +520,13 @@ int Cpu8080::op_cpi(void)
     /* Set flags */
     m_flagZ = (res == 0);
     m_flagS = ((int8_t)res < 0);
-    m_flagC = (((int8_t)m_regA > 0 && (int8_t) res < 0) ||
-               ((int8_t)m_regA < 0 && (int8_t) res > 0));
+    //m_flagC = (((int8_t)m_regA > 0 && (int8_t) res < 0) ||
+    //           ((int8_t)m_regA < 0 && (int8_t) res > 0));
+    m_flagC = m_regA < m_memory[m_pc+1];
     m_flagP = !get_odd_parity(res);
     // m_flagAC = // unimplemented
+
+    /* the result is NOT stored back in A */
 
     return 2;
 }
@@ -570,6 +576,60 @@ int Cpu8080::op_adi(void)
 
     /* Set flags */
     m_flagC = res < m_regA; // impies overflow
+    m_flagS = ((int8_t)res < 0);
+    m_flagZ = (res == 0);
+    m_flagP = !get_odd_parity(res);
+    // m_flagAC = // unimplemented;
+
+    /* Store the result back in A */
+    m_regA = res;
+
+    return 2;
+}
+
+int Cpu8080::op_aci(void)
+{
+    /* ADD with carry */
+    uint8_t res = m_regA + m_memory[m_pc+1] + (m_flagC & 1);
+
+    /* Set flags */
+    m_flagC = res < m_regA; // impies overflow
+    m_flagS = ((int8_t)res < 0);
+    m_flagZ = (res == 0);
+    m_flagP = !get_odd_parity(res);
+    // m_flagAC = // unimplemented;
+
+    /* Store the result back in A */
+    m_regA = res;
+
+    return 2;
+}
+
+int Cpu8080::op_sui(void)
+{
+    /* Subtract */
+    uint8_t res = m_regA - m_memory[m_pc+1];
+
+    /* Set flags */
+    m_flagC = res > m_regA; // impies overflow
+    m_flagS = ((int8_t)res < 0);
+    m_flagZ = (res == 0);
+    m_flagP = !get_odd_parity(res);
+    // m_flagAC = // unimplemented;
+    
+    /* Store the result back in A */
+    m_regA = res;
+
+    return 2;
+}
+
+int Cpu8080::op_sbi(void)
+{
+    /* Subtract */
+    uint8_t res = m_regA - m_memory[m_pc+1] - (m_flagC & 1);
+
+    /* Set flags */
+    m_flagC = res > m_regA; // impies overflow
     m_flagS = ((int8_t)res < 0);
     m_flagZ = (res == 0);
     m_flagP = !get_odd_parity(res);

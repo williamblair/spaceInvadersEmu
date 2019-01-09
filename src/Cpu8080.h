@@ -396,6 +396,9 @@ public:
     int op_ani(void);
     int op_ori(void);
     int op_adi(void);
+    int op_aci(void);
+    int op_sui(void);
+    int op_sbi(void);
 
 //////////////////////////////////////////////////////////////
 //****************** Call Instructions *********************//
