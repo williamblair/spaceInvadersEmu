@@ -63,36 +63,42 @@ void Cpu8080::run_next_op(void)
     {
         case 0x00:  num_increment = 1;         break; // NOP
         case 0x01:  num_increment = op_lxi();  break; // LXI B,D
+        case 0x02:  num_increment = op_stax(); break; // STAX B
         case 0x03:  num_increment = op_inx();  break; // INX B
         case 0x04:  num_increment = op_inr();  break; // INR B
         case 0x05:  num_increment = op_dcr();  break; // DCR B
         case 0x06:  num_increment = op_mvi();  break; // MVI B, D8
         case 0x07:  num_increment = op_rlc();  break; // RLC
         case 0x09:  num_increment = op_dad();  break; // DAD B
-//        case 0x0B:  num_increment = op_dcx();  break; // DCX B
+        case 0x0A:  num_increment = op_ldax(); break; // LDAX B
+        case 0x0B:  num_increment = op_dcx();  break; // DCX B
         case 0x0C:  num_increment = op_inr();  break; // INR C
         case 0x0D:  num_increment = op_dcr();  break; // DCR C
         case 0x0E:  num_increment = op_mvi();  break; // MVI C, D8
         case 0x0F:  num_increment = op_rrc();  break; // RRC
         case 0x11:  num_increment = op_lxi();  break; // LXI D, D8
+        case 0x12:  num_increment = op_stax(); break; // STAX D
         case 0x14:  num_increment = op_inr();  break; // INR D
         case 0x15:  num_increment = op_dcr();  break; // DCR D
         case 0x19:  num_increment = op_dad();  break; // DAD D
         case 0x13:  num_increment = op_inx();  break; // INX D
         case 0x16:  num_increment = op_mvi();  break; // MVI D, D8
         case 0x1A:  num_increment = op_ldax(); break; // LDAX D
+        case 0x1B:  num_increment = op_dcx();  break; // DCX D
         case 0x1C:  num_increment = op_inr();  break; // INR E
         case 0x1D:  num_increment = op_dcr();  break; // DCR E
         case 0x1E:  num_increment = op_mvi();  break; // MVI E,D8
         case 0x1F:  num_increment = op_rar();  break; // RAR
 
         case 0x21:  num_increment = op_lxi();  break; // LXI H, D8
+        case 0x22:  num_increment = op_shld(); break; // SHLD adr
         case 0x23:  num_increment = op_inx();  break; // INX H
         case 0x24:  num_increment = op_inr();  break; // INR H
         case 0x25:  num_increment = op_dcr();  break; // DCR H
         case 0x26:  num_increment = op_mvi();  break; // MVI H,D8
         case 0x29:  num_increment = op_dad();  break; // DAD H
         case 0x2A:  num_increment = op_lhld(); break; // LHLD adr
+        case 0x2B:  num_increment = op_dcx();  break; // DCX H
         case 0x2C:  num_increment = op_inr();  break; // INR L
         case 0x2D:  num_increment = op_dcr();  break; // DCR L
         case 0x2E:  num_increment = op_mvi();  break; // MVI L,D8
@@ -921,6 +927,20 @@ int Cpu8080::op_ldax(void)
     return 1;
 }
 
+int Cpu8080::op_stax(void)
+{
+    uint16_t addr;
+
+    /* Which register pair? */
+    if (((m_memory[m_pc] >> 4) & 1) == 0)   addr = (m_regB << 8) | m_regC; // BC
+    else                                    addr = (m_regD << 8) | m_regE; // DE
+
+    /* Store the accumulator in memory */
+    m_memory[addr] = m_regA;
+
+    return 1;
+}
+
 int Cpu8080::op_mov(void)
 {
     /* The source and destination registers */
@@ -1020,6 +1040,46 @@ int Cpu8080::op_inx(void)
         val++;
 
         /* Re store in registers */
+        *p1 = (val >> 8) & 0xFF;
+        *p2 = val & 0xFF;
+    }
+
+    return 1;
+}
+
+int Cpu8080::op_dcx(void)
+{
+    /* Which register? */
+    uint8_t reg = (m_memory[m_pc] >> 4) & 0x3;
+    uint8_t *p1 = NULL, *p2 = NULL;
+
+    switch (reg)
+    {
+        case 0: p1 = &m_regB; p2 = &m_regC; break; // BC
+        case 1: p1 = &m_regD; p2 = &m_regE; break; // DE
+        case 2: p1 = &m_regH; p2 = &m_regL; break; // HL
+        case 3:
+            m_sp--;
+            break;
+
+        default:
+            printf("  ** Invalid DCX Register Pair ** \n"
+                   "     This shouldn't happen :(     \n"
+                );
+            exit(0);
+
+    }
+
+    /* If the regiser wasn't sp... */
+    if (p1 != NULL) {
+
+        /* Get the register pair value */
+        uint16_t val = (*p1 << 8) | *p2;
+
+        /* Decrement it */
+        val--;
+
+        /* Store the val back in the register pair */
         *p1 = (val >> 8) & 0xFF;
         *p2 = val & 0xFF;
     }
@@ -1131,10 +1191,11 @@ int Cpu8080::op_dad(void)
     uint8_t reg = (m_memory[m_pc] >> 4) & 0x3;
 
     /* Pointers for the two registers, plus the
-     * combined value we're going to increment
+     * combined value we're going to increment with
      */
     uint8_t *p1 = NULL, *p2 = NULL;
     uint16_t pair;
+    uint16_t hl = (m_regH << 8) | m_regL;
 
     switch (reg)
     {
@@ -1144,8 +1205,8 @@ int Cpu8080::op_dad(void)
 
         /* SP */
         case 3:
-            m_flagC = (0xFFFF - m_sp) < m_sp;
-            m_sp += m_sp;
+            m_flagC = (0xFFFF - m_sp) < hl;
+            hl += m_sp;
 
             break;
 
@@ -1162,12 +1223,12 @@ int Cpu8080::op_dad(void)
 
         /* Get the value and set carry if it will occur */
         pair = (*p1 << 8) | *p2;
-        m_flagC = (0xFFFF - pair) < pair;
-        pair += pair;
+        m_flagC = (0xFFFF - pair) < hl;
+        hl += pair;
 
-        /* Store it back in the two registers */
-        *p1 = (pair >> 8) & 0xFF;
-        *p2 = pair & 0xFF;
+        /* Store it back in HL */
+        m_regH = (hl >> 8) & 0xFF;
+        m_regL = hl & 0xFF;
     }
 
     return 1;
@@ -1400,6 +1461,20 @@ int Cpu8080::op_lhld(void)
     /* Replace H and L */
     m_regH = m_memory[addr+1];
     m_regL = m_memory[addr];
+
+    return 3;
+}
+
+int Cpu8080::op_shld(void)
+{
+    /* Get the address */
+    uint8_t low  = m_memory[m_pc+1];
+    uint8_t high = m_memory[m_pc+2];
+    uint16_t addr = (high << 8) | low;
+
+    /* Replace The memory location */
+    m_memory[addr+1] = m_regH;
+    m_memory[addr] = m_regL;
 
     return 3;
 }

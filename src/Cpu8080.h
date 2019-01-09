@@ -418,12 +418,14 @@ public:
 //************** Data Transfer Instructions ****************//
 //////////////////////////////////////////////////////////////
     int op_ldax(void);
-    int op_mov  (void);
+    int op_stax(void);
+    int op_mov (void);
 
 //////////////////////////////////////////////////////////////
 //************** Register Pair Instructions ****************//
 //////////////////////////////////////////////////////////////
     int op_inx(void);
+    int op_dcx(void);
 
     int op_push(void);
     int op_pop (void);
@@ -457,6 +459,7 @@ public:
 //////////////////////////////////////////////////////////////
     int op_sta(void);
     int op_lhld(void);
+    int op_shld(void);
     int op_lda(void);
 
 //////////////////////////////////////////////////////////////
