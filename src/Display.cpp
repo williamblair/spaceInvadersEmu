@@ -166,7 +166,7 @@ void Display::set_pixels(void)
             for (p = 0; p < 8; ++p)
             {
                 if ((pix & (1<<p)) != 0) *p1 = 0xFFFFFFFF;
-                else                     *p1 = 0x0;
+                else                     *p1 = 0x00FFFFFF;
 
                 p1 -= 224; // next line
             }

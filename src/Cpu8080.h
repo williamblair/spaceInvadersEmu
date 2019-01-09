@@ -378,7 +378,14 @@ public:
 //******************* JUMP Instructions ********************//
 //////////////////////////////////////////////////////////////
     int op_jmp(void);
+    int op_jz(void);
     int op_jnz(void);
+    int op_jnc(void);
+    int op_jpe(void);
+    int op_jp(void);
+    int op_jc(void);
+    int op_jpo(void);
+    int op_jm(void);
 
 //////////////////////////////////////////////////////////////
 //**************** Immediate Instructions ******************//
@@ -413,6 +420,7 @@ public:
     int op_dad (void);
 
     int op_xchg(void);
+    int op_xthl(void);
 
 //////////////////////////////////////////////////////////////
 //************* Single Register Instructions ***************//

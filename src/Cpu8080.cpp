@@ -9,7 +9,8 @@ static int num_instructions = 0; // number of instructions ran
 
 Cpu8080::Cpu8080() {
     m_pc = 0;
-    m_sp = 0; 
+    //m_sp = 0; 
+    m_sp = 0xF000; // javascript 8080 starts it at this
 
     m_regA = 0; m_regPSW = 0;
     m_regB = 0; m_regC = 0;
@@ -115,20 +116,71 @@ void Cpu8080::run_next_op(void)
         case 0xC5:  num_increment = op_push(); break; // PUSH B
         case 0xC6:  num_increment = op_adi();  break; // ADI D8
         case 0xC9:  num_increment = op_ret();  break; // RET
-        case 0xCD:  num_increment = op_call(); break; // CALL adr
+        case 0xCA:  num_increment = op_jz();   break; // JZ adr
+
+        case 0xCD:
+#ifdef CPU_DIAG
+
+        printf("\n\n!!!!!CPU DIAG CD!!!!\n\n");
+
+        if (((m_memory[m_pc+2] << 8) | m_memory[m_pc+1]) == 5)
+        {
+            printf("    CPU DIAG: addr = 5\n");
+
+            if (m_regC == 9)
+            {
+                printf("    CPU DIAG: regC = 9\n");
+
+                uint16_t offset = (m_regD << 8) | m_regE;
+                char *str = (char *)&m_memory[offset+3]; // skip the prefix bytes
+
+                while (*str != '$') printf("%c", *str++);
+                printf("\n");
+            }
+            else if (m_regC == 2)
+            {
+                printf("    CPU DIAG: regC = 2\n");
+
+                // saw this in the inspected code, never saw it called
+                printf("Print char routine called\n");
+
+                exit(0);
+            }
+
+            num_increment = 3;
+        }
+        else if (((m_memory[m_pc+2] << 8) | m_memory[m_pc+1]) == 0)
+        {
+            exit(0);
+        }
+        else {
+            num_increment = op_call(); 
+        }
+        break;
+#else
+            num_increment = op_call(); 
+            break; // CALL adr
+#endif
 
         case 0xD1:  num_increment = op_pop();  break; // POP D
+        case 0xD2:  num_increment = op_jnc();  break; // JNC adr
         case 0xD3:  num_increment = op_out();  break; // OUT
         case 0xD5:  num_increment = op_push(); break; // PUSH D
+        case 0xDA:  num_increment = op_jc();   break; // JC adr
 
         case 0xE1:  num_increment = op_pop();  break; // POP H
+        case 0xE2:  num_increment = op_jpo();  break; // JPO adr
+        case 0xE3:  num_increment = op_xthl(); break; // XTHL
         case 0xE5:  num_increment = op_push(); break; // PUSH H
         case 0xE6:  num_increment = op_ani();  break; // ANI D8
+        case 0xEA:  num_increment = op_jpe();  break; // JPE adr
         case 0xEB:  num_increment = op_xchg(); break; // XCHG
 
         case 0xF1:  num_increment = op_pop();  break; // POP PSW
+        case 0xF2:  num_increment = op_jp();   break; // JP adr
         case 0xF5:  num_increment = op_push(); break; // PUSH PSW
         case 0xF6:  num_increment = op_ori();  break; // ORI D
+        case 0xFA:  num_increment = op_jm();   break; // JM adr
         case 0xFB:  num_increment = op_ei();   break; // EI
         case 0xFE:  num_increment = op_cpi();  break; // CPI D8
 
@@ -139,7 +191,29 @@ void Cpu8080::run_next_op(void)
     m_pc += num_increment;
 
     printf("%05d  PC: 0x%04X    Opcode: 0x%02X    %s\n", 
-        ++num_instructions, m_pc, m_memory[m_pc], op_lookup[m_memory[m_pc]]);
+        m_pc, m_pc, m_memory[m_pc], op_lookup[m_memory[m_pc]]);
+
+    printf("          af   bc   de   hl   pc   sp flags   \n");
+    printf("%04d    %04X %04X %04X %04X %04X %04X %c%c%c%c\n\n", 
+            m_pc,
+            (m_regA << 8) | 
+                   ( m_flagC         |
+                     (m_flagP  << 2) |
+                     (m_flagAC << 4) |
+                     (m_flagZ  << 6) |
+                     (m_flagS  << 7)), 
+            (m_regB << 8) | m_regC,
+            (m_regD << 8) | m_regE,
+            (m_regH << 8) | m_regL,
+            m_pc,
+            m_sp,
+            '.',
+            m_flagS ? 's' : '.',
+            m_flagP ? 'p' : '.',
+            '.'
+        );
+
+    //getchar();
 
     return;
 }
@@ -161,7 +235,7 @@ uint16_t Cpu8080::read16(uint16_t addr)
  * from https://www.microchip.com/forums/m587239.aspx */
 uint8_t Cpu8080::get_odd_parity(uint8_t num)
 {
-    num ^= (num >> 4);
+    num ^= (num >> 4 | num << 4);
     num ^= (num >> 2);
     num ^= (num >> 1);
 
@@ -252,6 +326,82 @@ int Cpu8080::op_jnz(void)
     return 3;
 }
 
+int Cpu8080::op_jz(void)
+{
+    if (m_flagZ != 0) {
+
+        return op_jmp();
+
+    }
+
+    return 3;
+}
+
+int Cpu8080::op_jnc(void)
+{
+    if (m_flagC == 0) {
+        
+        return op_jmp();
+
+    }
+
+    return 3;
+}
+
+int Cpu8080::op_jpe(void)
+{
+    if (m_flagP == 1) {
+
+        return op_jmp();
+
+    }
+
+    return 3;
+}
+
+int Cpu8080::op_jp(void)
+{
+    if (m_flagS == 0) {
+
+        return op_jmp();
+
+    }
+
+    return 3;
+}
+
+int Cpu8080::op_jc(void)
+{
+    if (m_flagC == 1) {
+
+        return op_jmp();
+
+    }
+
+    return 3;
+}
+
+int Cpu8080::op_jpo(void)
+{
+    if (m_flagP == 0) {
+
+        return op_jmp();
+
+    }
+
+    return 3;
+}
+
+int Cpu8080::op_jm(void)
+{
+    if (m_flagS == 1) {
+
+        return op_jmp();
+
+    }
+
+    return 3;
+}
 
 //////////////////////////////////////////////////////////////
 //**************** Immediate Instructions ******************//
@@ -752,6 +902,23 @@ int Cpu8080::op_xchg(void)
     return 1;
 }
 
+int Cpu8080::op_xthl(void)
+{
+    /* Save the current value of HL */
+    uint8_t prevH = m_regH;
+    uint8_t prevL = m_regL;
+
+    /* Set the HL registers */
+    m_regH = m_memory[m_sp+1];
+    m_regL = m_memory[m_sp];
+
+    /* Set the stack values */
+    m_memory[m_sp+1] = prevH;
+    m_memory[m_sp]   = prevL;
+
+    return 1;
+}
+
 //////////////////////////////////////////////////////////////
 //************* Single Register Instructions ***************//
 //////////////////////////////////////////////////////////////
@@ -788,6 +955,7 @@ int Cpu8080::op_dcr(void)
     /* Set flags */
     m_flagZ = (*regp == 0);
     m_flagS = ((int8_t)(*regp) < 0);
+    //m_flagP = !get_odd_parity(*regp);
     m_flagP = !get_odd_parity(*regp);
     // m_flagAC = // unimplemented
 

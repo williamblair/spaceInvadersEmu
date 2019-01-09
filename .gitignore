@@ -3,6 +3,7 @@
 *.project
 *.settings
 *.swp
+test/TestCpu
 SpaceInvaders
 Debug
 
