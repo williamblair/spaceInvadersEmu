@@ -117,6 +117,7 @@ void Cpu8080::run_next_op(void)
         case 0xC6:  num_increment = op_adi();  break; // ADI D8
         case 0xC9:  num_increment = op_ret();  break; // RET
         case 0xCA:  num_increment = op_jz();   break; // JZ adr
+        case 0xCC:  num_increment = op_cz();   break; // CZ adr
         case 0xCE:  num_increment = op_aci();  break; // ACI D8
 
         case 0xCD:
@@ -168,25 +169,32 @@ void Cpu8080::run_next_op(void)
         case 0xD1:  num_increment = op_pop();  break; // POP D
         case 0xD2:  num_increment = op_jnc();  break; // JNC adr
         case 0xD3:  num_increment = op_out();  break; // OUT
+        case 0xD4:  num_increment = op_cnc();  break; // CNC adr
         case 0xD5:  num_increment = op_push(); break; // PUSH D
         case 0xD6:  num_increment = op_sui();  break; // SUI D8
         case 0xDA:  num_increment = op_jc();   break; // JC adr
+        case 0xDC:  num_increment = op_cc();   break; // CC adr
         case 0xDE:  num_increment = op_sbi();  break; // SBI D8
 
         case 0xE1:  num_increment = op_pop();  break; // POP H
         case 0xE2:  num_increment = op_jpo();  break; // JPO adr
         case 0xE3:  num_increment = op_xthl(); break; // XTHL
+        case 0xE4:  num_increment = op_cpo();  break; // CPO adr
         case 0xE5:  num_increment = op_push(); break; // PUSH H
         case 0xE6:  num_increment = op_ani();  break; // ANI D8
         case 0xEA:  num_increment = op_jpe();  break; // JPE adr
         case 0xEB:  num_increment = op_xchg(); break; // XCHG
+        case 0xEC:  num_increment = op_cpe();  break; // CPE adr
+        case 0xEE:  num_increment = op_xri();  break; // XRI D8
 
         case 0xF1:  num_increment = op_pop();  break; // POP PSW
         case 0xF2:  num_increment = op_jp();   break; // JP adr
+        case 0xF4:  num_increment = op_cp();   break; // CP adr
         case 0xF5:  num_increment = op_push(); break; // PUSH PSW
         case 0xF6:  num_increment = op_ori();  break; // ORI D
         case 0xFA:  num_increment = op_jm();   break; // JM adr
         case 0xFB:  num_increment = op_ei();   break; // EI
+        case 0xFC:  num_increment = op_cm();   break; // CM 
         case 0xFE:  num_increment = op_cpi();  break; // CPI D8
 
         /* Unhandled opcode, exit */
@@ -641,6 +649,24 @@ int Cpu8080::op_sbi(void)
     return 2;
 }
 
+int Cpu8080::op_xri(void)
+{
+    /* XOR */
+    uint8_t res = m_regA ^ m_memory[m_pc+1];
+
+    /* Set flags */
+    m_flagC = 0; // carry bit is set to 0
+    m_flagS = ((int8_t)res < 0);
+    m_flagZ = (res == 0);
+    m_flagP = !get_odd_parity(res);
+    // m_flagAC = // unimplemented;
+
+    /* Store the result in A */
+    m_regA = res;
+
+    return 2;
+}
+
 //////////////////////////////////////////////////////////////
 //****************** Call Instructions *********************//
 //////////////////////////////////////////////////////////////
@@ -673,6 +699,70 @@ int Cpu8080::op_cnz(void)
 
     return 3;
 }
+
+int Cpu8080::op_cc(void)
+{
+    if (m_flagC == 1) {
+        return op_call();
+    }
+
+    return 3;
+}
+
+int Cpu8080::op_cpo(void)
+{
+    if (m_flagP == 0) {
+        return op_call();
+    }
+
+    return 3;
+}
+
+int Cpu8080::op_cm(void)
+{
+    if (m_flagS == 1) {
+        return op_call();
+    }
+
+    return 3;
+}
+
+int Cpu8080::op_cnc(void)
+{
+    if (m_flagC == 0) {
+        return op_call();
+    }
+
+    return 3;
+}
+
+int Cpu8080::op_cpe(void)
+{
+    if (m_flagP == 1) {
+        return op_call();
+    }
+
+    return 3;
+}
+
+int Cpu8080::op_cp(void)
+{
+    if (m_flagS == 0) {
+        return op_call();
+    }
+
+    return 3;
+}
+
+int Cpu8080::op_cz(void)
+{
+    if (m_flagZ == 1) {
+        return op_call();
+    }
+
+    return 3;
+}
+
 
 //////////////////////////////////////////////////////////////
 //************** Data Transfer Instructions ****************//

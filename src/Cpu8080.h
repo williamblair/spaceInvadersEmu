@@ -399,12 +399,20 @@ public:
     int op_aci(void);
     int op_sui(void);
     int op_sbi(void);
+    int op_xri(void);
+    int op_cpe(void);
+    int op_cp (void);
+    int op_cz (void);
 
 //////////////////////////////////////////////////////////////
 //****************** Call Instructions *********************//
 //////////////////////////////////////////////////////////////
     int op_call(void);
     int op_cnz(void);
+    int op_cc(void);
+    int op_cpo(void);
+    int op_cm(void);
+    int op_cnc(void);
 
 //////////////////////////////////////////////////////////////
 //************** Data Transfer Instructions ****************//
