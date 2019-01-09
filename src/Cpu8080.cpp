@@ -63,11 +63,13 @@ void Cpu8080::run_next_op(void)
     {
         case 0x00:  num_increment = 1;         break; // NOP
         case 0x01:  num_increment = op_lxi();  break; // LXI B,D
+        case 0x03:  num_increment = op_inx();  break; // INX B
         case 0x04:  num_increment = op_inr();  break; // INR B
         case 0x05:  num_increment = op_dcr();  break; // DCR B
         case 0x06:  num_increment = op_mvi();  break; // MVI B, D8
         case 0x07:  num_increment = op_rlc();  break; // RLC
         case 0x09:  num_increment = op_dad();  break; // DAD B
+//        case 0x0B:  num_increment = op_dcx();  break; // DCX B
         case 0x0C:  num_increment = op_inr();  break; // INR C
         case 0x0D:  num_increment = op_dcr();  break; // DCR C
         case 0x0E:  num_increment = op_mvi();  break; // MVI C, D8
@@ -97,6 +99,8 @@ void Cpu8080::run_next_op(void)
 
         case 0x31:  num_increment = op_lxi();  break; // LXI sp
         case 0x32:  num_increment = op_sta();  break; // STA adr
+        case 0x34:  num_increment = op_inr();  break; // INR M
+        case 0x35:  num_increment = op_dcr();  break; // DCR M
         case 0x36:  num_increment = op_mvi();  break; // MVI M,D8
         case 0x3A:  num_increment = op_lda();  break; // LDA adr
         case 0x3D:  num_increment = op_dcr();  break; // DCR A
@@ -108,6 +112,7 @@ void Cpu8080::run_next_op(void)
         case 0x43:  num_increment = op_mov();  break; // MOV B,E
         case 0x44:  num_increment = op_mov();  break; // MOV B,H
         case 0x45:  num_increment = op_mov();  break; // MOV B,L
+        case 0x46:  num_increment = op_mov();  break; // MOV B,M
         case 0x47:  num_increment = op_mov();  break; // MOV B,A
         case 0x48:  num_increment = op_mov();  break; // MOV C,B
         case 0x4A:  num_increment = op_mov();  break; // MOV C,D
@@ -143,8 +148,14 @@ void Cpu8080::run_next_op(void)
         case 0x6A:  num_increment = op_mov();  break; // MOV L,D
         case 0x6B:  num_increment = op_mov();  break; // MOV L,E
         case 0x6C:  num_increment = op_mov();  break; // MOV L,H
+        case 0x6E:  num_increment = op_mov();  break; // MOV L,M
         case 0x6F:  num_increment = op_mov();  break; // MOV L,A
 
+        case 0x70:  num_increment = op_mov();  break; // MOV M,B
+        case 0x72:  num_increment = op_mov();  break; // MOV M,D
+        case 0x73:  num_increment = op_mov();  break; // MOV M,E
+        case 0x74:  num_increment = op_mov();  break; // MOV M,H
+        case 0x75:  num_increment = op_mov();  break; // MOV M,L
         case 0x77:  num_increment = op_mov();  break; // MOV M,A
         case 0x78:  num_increment = op_mov();  break; // MOV A,B
         case 0x79:  num_increment = op_mov();  break; // MOV A,C
@@ -160,6 +171,7 @@ void Cpu8080::run_next_op(void)
         case 0x83:  num_increment = op_add();  break; // ADD E
         case 0x84:  num_increment = op_add();  break; // ADD H
         case 0x85:  num_increment = op_add();  break; // ADD L
+        case 0x86:  num_increment = op_add();  break; // ADD M
         case 0x87:  num_increment = op_add();  break; // ADD A
         case 0x88:  num_increment = op_adc();  break; // ADC B
         case 0x89:  num_increment = op_adc();  break; // ADC C
@@ -167,6 +179,7 @@ void Cpu8080::run_next_op(void)
         case 0x8B:  num_increment = op_adc();  break; // ADC E
         case 0x8C:  num_increment = op_adc();  break; // ADC H
         case 0x8D:  num_increment = op_adc();  break; // ADC L
+        case 0x8E:  num_increment = op_adc();  break; // ADC M
         case 0x8F:  num_increment = op_adc();  break; // ADC A
 
         case 0x90:  num_increment = op_sub();  break; // SUB B
@@ -175,6 +188,7 @@ void Cpu8080::run_next_op(void)
         case 0x93:  num_increment = op_sub();  break; // SUB E
         case 0x94:  num_increment = op_sub();  break; // SUB H
         case 0x95:  num_increment = op_sub();  break; // SUB L
+        case 0x96:  num_increment = op_sub();  break; // SUB M
         case 0x97:  num_increment = op_sub();  break; // SUB A
         case 0x98:  num_increment = op_sbb();  break; // SBB B
         case 0x99:  num_increment = op_sbb();  break; // SBB C
@@ -182,10 +196,41 @@ void Cpu8080::run_next_op(void)
         case 0x9B:  num_increment = op_sbb();  break; // SBB E
         case 0x9C:  num_increment = op_sbb();  break; // SBB H
         case 0x9D:  num_increment = op_sbb();  break; // SBB L
+        case 0x9E:  num_increment = op_sbb();  break; // SBB M
         case 0x9F:  num_increment = op_sbb();  break; // SBB A
+        
 
+        case 0xA1:  num_increment = op_ana();  break; // ANA C
+        case 0xA2:  num_increment = op_ana();  break; // ANA D
+        case 0xA3:  num_increment = op_ana();  break; // ANA E
+        case 0xA4:  num_increment = op_ana();  break; // ANA H
+        case 0xA5:  num_increment = op_ana();  break; // ANA L
+        case 0xA6:  num_increment = op_ana();  break; // ANA M
         case 0xA7:  num_increment = op_ana();  break; // ANA A
+        case 0xA8:  num_increment = op_xra();  break; // XRA B
+        case 0xA9:  num_increment = op_xra();  break; // XRA C
+        case 0xAA:  num_increment = op_xra();  break; // XRA D
+        case 0xAB:  num_increment = op_xra();  break; // XRA E
+        case 0xAC:  num_increment = op_xra();  break; // XRA H
+        case 0xAD:  num_increment = op_xra();  break; // XRA L
+        case 0xAE:  num_increment = op_xra();  break; // XRA M
         case 0xAF:  num_increment = op_xra();  break; // XRA A
+
+        case 0xB0:  num_increment = op_ora();  break; // ORA B
+        case 0xB1:  num_increment = op_ora();  break; // ORA C
+        case 0xB2:  num_increment = op_ora();  break; // ORA D
+        case 0xB3:  num_increment = op_ora();  break; // ORA E
+        case 0xB4:  num_increment = op_ora();  break; // ORA H
+        case 0xB5:  num_increment = op_ora();  break; // ORA L
+        case 0xB6:  num_increment = op_ora();  break; // ORA M
+        case 0xB7:  num_increment = op_ora();  break; // ORA A
+        case 0xB8:  num_increment = op_cmp();  break; // CMP B
+        case 0xB9:  num_increment = op_cmp();  break; // CMP C
+        case 0xBA:  num_increment = op_cmp();  break; // CMP D
+        case 0xBB:  num_increment = op_cmp();  break; // CMP E
+        case 0xBC:  num_increment = op_cmp();  break; // CMP H
+        case 0xBD:  num_increment = op_cmp();  break; // CMP L
+        case 0xBE:  num_increment = op_cmp();  break; // CMP M
 
         case 0xC0:  num_increment = op_rnz();  break; // RNZ
         case 0xC1:  num_increment = op_pop();  break; // POP B
@@ -1685,6 +1730,79 @@ int Cpu8080::op_xra(void)
 
     /* Store the result in A */
     m_regA = res;
+
+    return 1;
+}
+
+int Cpu8080::op_ora(void)
+{
+    /* Which register? */
+    uint8_t reg = m_memory[m_pc] & 0x7;
+    uint8_t *regp = NULL;
+
+    switch (reg)
+    {
+        case 0: regp = &m_regB; break; // B
+        case 1: regp = &m_regC; break; // C
+        case 2: regp = &m_regD; break; // D
+        case 3: regp = &m_regE; break; // E
+        case 4: regp = &m_regH; break; // H
+        case 5: regp = &m_regL; break; // L
+        case 6: regp = &m_memory[(m_regH << 8) | m_regL]; break; // M
+        case 7: regp = &m_regA; break; // A
+
+        default:
+            printf("  Unhandled ORA Register: 0x%X\n", reg);
+            exit(0);
+    }
+
+
+    /* OR */
+    uint8_t res = m_regA | *regp;
+
+    /* Set flags */
+    m_flagC = 0; // carry bit is reset to 0
+    m_flagZ = (res == 0);
+    m_flagS = ((int8_t)res < 0);
+    m_flagP = !get_odd_parity(res);
+
+    /* Store the result in A */
+    m_regA = res;
+
+    return 1;
+}
+
+int Cpu8080::op_cmp(void)
+{
+    /* Which register? */
+    uint8_t reg = m_memory[m_pc] & 0x7;
+    uint8_t *regp = NULL;
+
+    switch (reg)
+    {
+        case 0: regp = &m_regB; break; // B
+        case 1: regp = &m_regC; break; // C
+        case 2: regp = &m_regD; break; // D
+        case 3: regp = &m_regE; break; // E
+        case 4: regp = &m_regH; break; // H
+        case 5: regp = &m_regL; break; // L
+        case 6: regp = &m_memory[(m_regH << 8) | m_regL]; break; // M
+        case 7: regp = &m_regA; break; // A
+
+        default:
+            printf("  Unhandled XRA Register: 0x%X\n", reg);
+            exit(0);
+    }
+
+    /* Get the difference */
+    uint8_t res = m_regA - *regp;
+
+    /* Set flags */
+    m_flagZ = (res == 0);
+    m_flagC = (*regp > m_regA);
+    m_flagS = ((int8_t)res < 0);
+    m_flagP = !get_odd_parity(res);
+    //m_flagAC = // unimplemented;
 
     return 1;
 }

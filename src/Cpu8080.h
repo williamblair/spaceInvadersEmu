@@ -480,6 +480,9 @@ public:
     int op_sbb(void);
     int op_ana(void);
     int op_xra(void);
+    int op_ora(void);
+
+    int op_cmp(void);
 
 //////////////////////////////////////////////////////////////
 //*********** Interrupt Flip-Flop Instructions *************//
