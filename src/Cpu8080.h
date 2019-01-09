@@ -443,6 +443,14 @@ public:
 //********** Return from Subroutine Instructions ***********//
 //////////////////////////////////////////////////////////////
     int op_ret(void);
+    int op_rpe(void);
+    int op_rpo(void);
+    int op_rp (void);
+    int op_rm (void);
+    int op_rc (void);
+    int op_rnc(void);
+    int op_rz (void);
+    int op_rnz(void);
 
 //////////////////////////////////////////////////////////////
 //************* Direct Addressing Instructions *************//
@@ -466,6 +474,7 @@ public:
 //////////////////////////////////////////////////////////////
 //******* Register/Memory to Accumulator Instructions ******//
 //////////////////////////////////////////////////////////////
+    int op_add(void);
     int op_ana(void);
     int op_xra(void);
 

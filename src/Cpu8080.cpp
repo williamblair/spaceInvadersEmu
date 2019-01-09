@@ -63,58 +63,116 @@ void Cpu8080::run_next_op(void)
     {
         case 0x00:  num_increment = 1;         break; // NOP
         case 0x01:  num_increment = op_lxi();  break; // LXI B,D
+        case 0x04:  num_increment = op_inr();  break; // INR B
         case 0x05:  num_increment = op_dcr();  break; // DCR B
         case 0x06:  num_increment = op_mvi();  break; // MVI B, D8
         case 0x07:  num_increment = op_rlc();  break; // RLC
         case 0x09:  num_increment = op_dad();  break; // DAD B
+        case 0x0C:  num_increment = op_inr();  break; // INR C
         case 0x0D:  num_increment = op_dcr();  break; // DCR C
         case 0x0E:  num_increment = op_mvi();  break; // MVI C, D8
         case 0x0F:  num_increment = op_rrc();  break; // RRC
         case 0x11:  num_increment = op_lxi();  break; // LXI D, D8
+        case 0x14:  num_increment = op_inr();  break; // INR D
+        case 0x15:  num_increment = op_dcr();  break; // DCR D
         case 0x19:  num_increment = op_dad();  break; // DAD D
         case 0x13:  num_increment = op_inx();  break; // INX D
         case 0x16:  num_increment = op_mvi();  break; // MVI D, D8
         case 0x1A:  num_increment = op_ldax(); break; // LDAX D
+        case 0x1C:  num_increment = op_inr();  break; // INR E
+        case 0x1D:  num_increment = op_dcr();  break; // DCR E
+        case 0x1E:  num_increment = op_mvi();  break; // MVI E,D8
         case 0x1F:  num_increment = op_rar();  break; // RAR
 
         case 0x21:  num_increment = op_lxi();  break; // LXI H, D8
         case 0x23:  num_increment = op_inx();  break; // INX H
+        case 0x24:  num_increment = op_inr();  break; // INR H
+        case 0x25:  num_increment = op_dcr();  break; // DCR H
         case 0x26:  num_increment = op_mvi();  break; // MVI H,D8
         case 0x29:  num_increment = op_dad();  break; // DAD H
         case 0x2A:  num_increment = op_lhld(); break; // LHLD adr
+        case 0x2C:  num_increment = op_inr();  break; // INR L
+        case 0x2D:  num_increment = op_dcr();  break; // DCR L
+        case 0x2E:  num_increment = op_mvi();  break; // MVI L,D8
 
         case 0x31:  num_increment = op_lxi();  break; // LXI sp
         case 0x32:  num_increment = op_sta();  break; // STA adr
         case 0x36:  num_increment = op_mvi();  break; // MVI M,D8
         case 0x3A:  num_increment = op_lda();  break; // LDA adr
+        case 0x3D:  num_increment = op_dcr();  break; // DCR A
         case 0x3C:  num_increment = op_inr();  break; // INR A
         case 0x3E:  num_increment = op_mvi();  break; // MVI A,D8
 
+        case 0x41:  num_increment = op_mov();  break; // MOV B,C
+        case 0x42:  num_increment = op_mov();  break; // MOV B,D
+        case 0x43:  num_increment = op_mov();  break; // MOV B,E
+        case 0x44:  num_increment = op_mov();  break; // MOV B,H
+        case 0x45:  num_increment = op_mov();  break; // MOV B,L
+        case 0x47:  num_increment = op_mov();  break; // MOV B,A
+        case 0x48:  num_increment = op_mov();  break; // MOV C,B
+        case 0x4A:  num_increment = op_mov();  break; // MOV C,D
+        case 0x4B:  num_increment = op_mov();  break; // MOV C,E
+        case 0x4C:  num_increment = op_mov();  break; // MOV C,H
+        case 0x4D:  num_increment = op_mov();  break; // MOV C,L
+        case 0x4F:  num_increment = op_mov();  break; // MOV C,A
+
+        case 0x50:  num_increment = op_mov();  break; // MOV D,B
+        case 0x51:  num_increment = op_mov();  break; // MOV D,C
+        case 0x53:  num_increment = op_mov();  break; // MOV D,E
+        case 0x54:  num_increment = op_mov();  break; // MOV D,H
+        case 0x55:  num_increment = op_mov();  break; // MOV D,L
         case 0x56:  num_increment = op_mov();  break; // MOV D,M
+        case 0x57:  num_increment = op_mov();  break; // MOV D,A
+        case 0x58:  num_increment = op_mov();  break; // MOV E,B
+        case 0x59:  num_increment = op_mov();  break; // MOV E,C
+        case 0x5A:  num_increment = op_mov();  break; // MOV E,D
+        case 0x5C:  num_increment = op_mov();  break; // MOV E,H
+        case 0x5D:  num_increment = op_mov();  break; // MOV E,L
         case 0x5E:  num_increment = op_mov();  break; // MOV E,M
         case 0x5F:  num_increment = op_mov();  break; // MOV E,A
 
+        case 0x60:  num_increment = op_mov();  break; // MOV H,B
+        case 0x61:  num_increment = op_mov();  break; // MOV H,C
+        case 0x62:  num_increment = op_mov();  break; // MOV H,D
+        case 0x63:  num_increment = op_mov();  break; // MOV H,E
+        case 0x65:  num_increment = op_mov();  break; // MOV H,L
         case 0x66:  num_increment = op_mov();  break; // MOV H,M
         case 0x67:  num_increment = op_mov();  break; // MOV H,A
+        case 0x68:  num_increment = op_mov();  break; // MOV L,B
+        case 0x69:  num_increment = op_mov();  break; // MOV L,C
+        case 0x6A:  num_increment = op_mov();  break; // MOV L,D
+        case 0x6B:  num_increment = op_mov();  break; // MOV L,E
+        case 0x6C:  num_increment = op_mov();  break; // MOV L,H
         case 0x6F:  num_increment = op_mov();  break; // MOV L,A
 
         case 0x77:  num_increment = op_mov();  break; // MOV M,A
         case 0x78:  num_increment = op_mov();  break; // MOV A,B
+        case 0x79:  num_increment = op_mov();  break; // MOV A,C
         case 0x7A:  num_increment = op_mov();  break; // MOV A,D
         case 0x7B:  num_increment = op_mov();  break; // MOV A,E
         case 0x7C:  num_increment = op_mov();  break; // MOV A,H
         case 0x7D:  num_increment = op_mov();  break; // MOV A,L
         case 0x7E:  num_increment = op_mov();  break; // MOV A,M
 
+        case 0x80:  num_increment = op_add();  break; // ADD B
+        case 0x81:  num_increment = op_add();  break; // ADD C
+        case 0x82:  num_increment = op_add();  break; // ADD D
+        case 0x83:  num_increment = op_add();  break; // ADD E
+        case 0x84:  num_increment = op_add();  break; // ADD H
+        case 0x85:  num_increment = op_add();  break; // ADD L
+        case 0x87:  num_increment = op_add();  break; // ADD A
+
         case 0xA7:  num_increment = op_ana();  break; // ANA A
         case 0xAF:  num_increment = op_xra();  break; // XRA A
 
+        case 0xC0:  num_increment = op_rnz();  break; // RNZ
         case 0xC1:  num_increment = op_pop();  break; // POP B
         case 0xC2:  num_increment = op_jnz();  break; // JNZ adr
         case 0xC4:  num_increment = op_cnz();  break; // CNZ adr
         case 0xC3:  num_increment = op_jmp();  break; // JMP adr
         case 0xC5:  num_increment = op_push(); break; // PUSH B
         case 0xC6:  num_increment = op_adi();  break; // ADI D8
+        case 0xC8:  num_increment = op_rz();   break; // RZ
         case 0xC9:  num_increment = op_ret();  break; // RET
         case 0xCA:  num_increment = op_jz();   break; // JZ adr
         case 0xCC:  num_increment = op_cz();   break; // CZ adr
@@ -166,32 +224,38 @@ void Cpu8080::run_next_op(void)
             break; // CALL adr
 #endif
 
+        case 0xD0:  num_increment = op_rnc();  break; // RNC
         case 0xD1:  num_increment = op_pop();  break; // POP D
         case 0xD2:  num_increment = op_jnc();  break; // JNC adr
         case 0xD3:  num_increment = op_out();  break; // OUT
         case 0xD4:  num_increment = op_cnc();  break; // CNC adr
         case 0xD5:  num_increment = op_push(); break; // PUSH D
         case 0xD6:  num_increment = op_sui();  break; // SUI D8
+        case 0xD8:  num_increment = op_rc();   break; // RC
         case 0xDA:  num_increment = op_jc();   break; // JC adr
         case 0xDC:  num_increment = op_cc();   break; // CC adr
         case 0xDE:  num_increment = op_sbi();  break; // SBI D8
 
+        case 0xE0:  num_increment = op_rpo();  break; // RPO
         case 0xE1:  num_increment = op_pop();  break; // POP H
         case 0xE2:  num_increment = op_jpo();  break; // JPO adr
         case 0xE3:  num_increment = op_xthl(); break; // XTHL
         case 0xE4:  num_increment = op_cpo();  break; // CPO adr
         case 0xE5:  num_increment = op_push(); break; // PUSH H
         case 0xE6:  num_increment = op_ani();  break; // ANI D8
+        case 0xE8:  num_increment = op_rpe();  break; // RPE
         case 0xEA:  num_increment = op_jpe();  break; // JPE adr
         case 0xEB:  num_increment = op_xchg(); break; // XCHG
         case 0xEC:  num_increment = op_cpe();  break; // CPE adr
         case 0xEE:  num_increment = op_xri();  break; // XRI D8
 
+        case 0xF0:  num_increment = op_rp();   break; // RP
         case 0xF1:  num_increment = op_pop();  break; // POP PSW
         case 0xF2:  num_increment = op_jp();   break; // JP adr
         case 0xF4:  num_increment = op_cp();   break; // CP adr
         case 0xF5:  num_increment = op_push(); break; // PUSH PSW
         case 0xF6:  num_increment = op_ori();  break; // ORI D
+        case 0xF8:  num_increment = op_rm();   break; // RM
         case 0xFA:  num_increment = op_jm();   break; // JM adr
         case 0xFB:  num_increment = op_ei();   break; // EI
         case 0xFC:  num_increment = op_cm();   break; // CM 
@@ -1171,6 +1235,78 @@ int Cpu8080::op_ret(void)
     return 0;
 }
 
+int Cpu8080::op_rpe(void)
+{
+    if (m_flagP == 1) {
+        return op_ret();
+    }
+
+    return 1;
+}
+
+int Cpu8080::op_rpo(void)
+{
+    if (m_flagP == 0) {
+        return op_ret();
+    }
+
+    return 1;
+}
+
+int Cpu8080::op_rp(void)
+{
+    if (m_flagS == 0) {
+        return op_ret();
+    }
+
+    return 1;
+}
+
+int Cpu8080::op_rm(void)
+{
+    if (m_flagS == 1) {
+        return op_ret();
+    }
+
+    return 1;
+}
+
+int Cpu8080::op_rc(void)
+{
+    if (m_flagC == 1) {
+        return op_ret();
+    }
+
+    return 1;
+}
+
+int Cpu8080::op_rnc(void)
+{
+    if (m_flagC == 0) {
+        return op_ret();
+    }
+
+    return 1;
+}
+
+int Cpu8080::op_rz(void)
+{
+    if (m_flagZ == 1) {
+        return op_ret();
+    }
+
+    return 1;
+}
+
+int Cpu8080::op_rnz(void)
+{
+    if (m_flagZ == 0) {
+        return op_ret();
+    }
+
+    return 1;
+}
+
 //////////////////////////////////////////////////////////////
 //************* Direct Addressing Instructions *************//
 //////////////////////////////////////////////////////////////
@@ -1302,6 +1438,45 @@ int Cpu8080::op_rar(void)
 //////////////////////////////////////////////////////////////
 //******* Register/Memory to Accumulator Instructions ******//
 //////////////////////////////////////////////////////////////
+int Cpu8080::op_add(void)
+{
+    /* Which register? */
+    uint8_t reg = m_memory[m_pc] & 0x7;
+    uint8_t *regp = NULL;
+
+    switch (reg)
+    {
+        case 0: regp = &m_regB; break; // B
+        case 1: regp = &m_regC; break; // C
+        case 2: regp = &m_regD; break; // D
+        case 3: regp = &m_regE; break; // E
+        case 4: regp = &m_regH; break; // H
+        case 5: regp = &m_regL; break; // L
+        case 6: regp = &m_memory[(m_regH << 8) | m_regL]; break; // M
+        case 7: regp = &m_regA; break; // A
+
+        default:
+            printf("  Unhandled ADD Register: 0x%X\n", reg);
+            exit(0);
+    }
+
+    /* ADD */
+    uint8_t res = m_regA + *regp;
+
+    /* Set flags */
+    m_flagC = (res < m_regA); // implies overflow
+    m_flagZ = (res == 0);
+    m_flagS = ((int8_t)res < 0);
+    m_flagP = !get_odd_parity(res);
+    // m_flagAC = // unimplemented
+
+    /* Store the result */
+    m_regA = res;
+
+    return 1;
+}
+
+
 int Cpu8080::op_ana(void)
 {
     /* Which register? */
