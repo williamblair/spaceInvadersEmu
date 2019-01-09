@@ -136,6 +136,8 @@ void Cpu8080::run_next_op(void)
 
                 while (*str != '$') printf("%c", *str++);
                 printf("\n");
+
+                exit(0);
             }
             else if (m_regC == 2)
             {
@@ -190,12 +192,11 @@ void Cpu8080::run_next_op(void)
 
     m_pc += num_increment;
 
-    printf("%05d  PC: 0x%04X    Opcode: 0x%02X    %s\n", 
-        m_pc, m_pc, m_memory[m_pc], op_lookup[m_memory[m_pc]]);
+    printf("0x%04X    Opcode: 0x%02X    %s\n", 
+        m_pc, m_memory[m_pc], op_lookup[m_memory[m_pc]]);
 
-    printf("          af   bc   de   hl   pc   sp flags   \n");
-    printf("%04d    %04X %04X %04X %04X %04X %04X %c%c%c%c\n\n", 
-            m_pc,
+    printf("      af   bc   de   hl   pc   sp flags   \n");
+    printf("    %04X %04X %04X %04X %04X %04X %c%c%c%c\n\n", 
             (m_regA << 8) | 
                    ( m_flagC         |
                      (m_flagP  << 2) |
@@ -573,6 +574,9 @@ int Cpu8080::op_adi(void)
     m_flagZ = (res == 0);
     m_flagP = !get_odd_parity(res);
     // m_flagAC = // unimplemented;
+
+    /* Store the result back in A */
+    m_regA = res;
 
     return 2;
 }
