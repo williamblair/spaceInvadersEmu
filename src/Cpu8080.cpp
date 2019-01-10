@@ -350,6 +350,7 @@ void Cpu8080::run_next_op(void)
 
     m_pc += num_increment;
 
+#if 0
     printf("0x%04X    Opcode: 0x%02X    %s\n", 
         m_pc, m_memory[m_pc], op_lookup[m_memory[m_pc]]);
 
@@ -373,7 +374,7 @@ void Cpu8080::run_next_op(void)
         );
 
     //getchar();
-
+#endif
     return;
 }
 
@@ -428,6 +429,14 @@ void Cpu8080::set_flags_logical(uint8_t res)
  */
 void Cpu8080::run_interrupt(int num)
 {
+
+    /* Only run if interrupts are enabled */
+    if (!m_interrupts) {
+        //printf("    Interrupts Disabled!\n");
+        return;
+    }
+    printf("    Running interrupt: %d\n", num);
+
     /* Run 'PUSH PC' */
     m_memory[m_sp - 1] = (m_pc >> 8) & 0xFF;
     m_memory[m_sp - 2] = m_pc & 0xFF;

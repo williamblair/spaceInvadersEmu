@@ -54,12 +54,15 @@ int main(int argc, char *argv[])
     for(;;) 
     {
 // just to speed things up for implementation
-//        if (SDL_GetTicks() - timer > (1000/60)) {
-            timer = SDL_GetTicks();
+        if (SDL_GetTicks() - timer > (1000/60)) {
+
+            cpu.run_interrupt(2);
 
             display.update();
             cpu.run_next_op();
-//        }
+
+            timer = SDL_GetTicks();
+        }
 
     }
 

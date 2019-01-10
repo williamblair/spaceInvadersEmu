@@ -70,18 +70,22 @@ void Display::update(void)
                 case SDLK_RETURN:
                     printf("  Key Enter Down\n");
                     //m_cpu->m_port1 |= 0b00000100; // Set bit 2 or port 1 (1P Start)
+                    m_ports[1] |= 0b00000100;
                     break;
                 case SDLK_LEFT:
                     printf("  Key Left Down\n");
                     //m_cpu->m_port1 |= 0b00100000; // Set bit 5 of port 1 (1P Left)
+                    m_ports[1] |= 0b00100000; // Set bit 5 of port 1 (1P Left)
                     break;
                 case SDLK_RIGHT:
                     printf("  Key Right Down\n");
                     //m_cpu->m_port1 |= 0b01000000; // Set bit 6 of port 1 (1P Right)
+                    m_ports[1] |= 0b01000000; // Set bit 6 of port 1 (1P Right)
                     break;
                 case SDLK_SPACE:
                     printf("  Key Space Down\n");
                     //m_cpu->m_port1 |= 0b00010000; // Set bit 4 of port 1 (1P shoot)
+                    m_ports[1] |= 0b00010000; // Set bit 4 of port 1 (1P shoot)
                 default:
                     break;
             }
@@ -95,18 +99,22 @@ void Display::update(void)
                 case SDLK_RETURN:
                     printf("  Key Enter Up\n");
                     //m_cpu->m_port1 &= ~0b00000100; // Clear bit 2 or port 1 (1P Start)
+                    m_ports[1] &= ~0b00000100; // Clear bit 2 or port 1 (1P Start)
                     break;
                 case SDLK_LEFT:
                     printf("  Key Left Up\n");
                     //m_cpu->m_port1 &= ~0b00100000; // Clear bit 5 of port 1 (1P Left)
+                    m_ports[1] &= ~0b00100000; // Clear bit 5 of port 1 (1P Left)
                     break;
                 case SDLK_RIGHT:
                     printf("  Key Right Up\n");
                     //m_cpu->m_port1 &= ~0b01000000; // Clear bit 6 of port 1 (1P Right)
+                    m_ports[1] &= ~0b01000000; // Clear bit 6 of port 1 (1P Right)
                     break;
                 case SDLK_SPACE:
                     printf("  Key Space Up\n");
                     //m_cpu->m_port1 &= ~0b00010000; // Clear bit 4 of port 1 (1P shoot)
+                    m_ports[1] &= ~0b00010000; // Clear bit 4 of port 1 (1P shoot)
                 default:
                     break;
             }
@@ -127,12 +135,12 @@ void Display::set_pixels(void)
     int i, j, p, offset;
     Uint8 pix;
     Uint32 *p1;
-    //int pixel_index = 0;
+    int pixel_index = 0;
     Uint8 *space_mem = &m_memory[0x2400];
     Uint8 *display_mem = (Uint8 *)(m_space_image->pixels);
 
+
     SDL_LockSurface(m_space_image);
-#if 0
     for (i = m_vid_start; i < m_vid_end; ++i)
     {
         /* Get the current byte */
@@ -146,8 +154,8 @@ void Display::set_pixels(void)
             cur >>= 1;
         }
     }
-#endif
 
+#if 0
     for (i = 0; i < 224; ++i)
     {
         for (j = 0; j < 256; j+=8)
@@ -173,6 +181,7 @@ void Display::set_pixels(void)
         }
     }
 
+#endif
     SDL_UnlockSurface(m_space_image);
 }
 
