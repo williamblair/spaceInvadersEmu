@@ -58,11 +58,12 @@ int main(int argc, char *argv[])
 
             cpu.run_interrupt(2);
 
-            display.update();
-            cpu.run_next_op();
 
             timer = SDL_GetTicks();
         }
+
+        display.update();
+        cpu.run_next_op();
 
     }
 

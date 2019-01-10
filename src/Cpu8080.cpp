@@ -350,9 +350,8 @@ void Cpu8080::run_next_op(void)
 
     m_pc += num_increment;
 
-#if 0
-    printf("0x%04X    Opcode: 0x%02X    %s\n", 
-        m_pc, m_memory[m_pc], op_lookup[m_memory[m_pc]]);
+    printf("%d    0x%04X    Opcode: 0x%02X    %s\n", 
+        ++num_instructions, m_pc, m_memory[m_pc], op_lookup[m_memory[m_pc]]);
 
     printf("      af   bc   de   hl   pc   sp flags   \n");
     printf("    %04X %04X %04X %04X %04X %04X %c%c%c%c\n\n", 
@@ -374,7 +373,6 @@ void Cpu8080::run_next_op(void)
         );
 
     //getchar();
-#endif
     return;
 }
 
