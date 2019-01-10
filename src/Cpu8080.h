@@ -432,14 +432,19 @@ public:
 
     int op_dad (void);
 
+
+    // technically these are carry bit instructions
     int op_xchg(void);
     int op_xthl(void);
+    int op_stc(void);
+    int op_cmc(void);
 
 //////////////////////////////////////////////////////////////
 //************* Single Register Instructions ***************//
 //////////////////////////////////////////////////////////////
     int op_dcr(void);
     int op_inr(void);
+    int op_cma(void);
 
 //////////////////////////////////////////////////////////////
 //********** Return from Subroutine Instructions ***********//

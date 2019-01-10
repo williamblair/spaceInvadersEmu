@@ -102,16 +102,20 @@ void Cpu8080::run_next_op(void)
         case 0x2C:  num_increment = op_inr();  break; // INR L
         case 0x2D:  num_increment = op_dcr();  break; // DCR L
         case 0x2E:  num_increment = op_mvi();  break; // MVI L,D8
+        case 0x2F:  num_increment = op_cma();  break; // CMA
 
         case 0x31:  num_increment = op_lxi();  break; // LXI sp
         case 0x32:  num_increment = op_sta();  break; // STA adr
         case 0x34:  num_increment = op_inr();  break; // INR M
         case 0x35:  num_increment = op_dcr();  break; // DCR M
         case 0x36:  num_increment = op_mvi();  break; // MVI M,D8
+        case 0x37:  num_increment = op_stc();  break; // STC 
         case 0x3A:  num_increment = op_lda();  break; // LDA adr
         case 0x3D:  num_increment = op_dcr();  break; // DCR A
         case 0x3C:  num_increment = op_inr();  break; // INR A
         case 0x3E:  num_increment = op_mvi();  break; // MVI A,D8
+        case 0x3F:  num_increment = op_cmc();  break; // CMC
+
 
         case 0x41:  num_increment = op_mov();  break; // MOV B,C
         case 0x42:  num_increment = op_mov();  break; // MOV B,D
@@ -1265,6 +1269,22 @@ int Cpu8080::op_xthl(void)
     return 1;
 }
 
+int Cpu8080::op_stc(void)
+{
+    /* Set the carry bit to 1 */
+    m_flagC = 1;
+
+    return 1;
+}
+
+int Cpu8080::op_cmc(void)
+{
+    /* Complement the carry bit */
+    m_flagC = !m_flagC;
+
+    return 1;
+}
+
 //////////////////////////////////////////////////////////////
 //************* Single Register Instructions ***************//
 //////////////////////////////////////////////////////////////
@@ -1341,6 +1361,14 @@ int Cpu8080::op_inr(void)
     m_flagS = ((int8_t)(*regp) < 0);
     m_flagP = !get_odd_parity(*regp);
     // m_flagAC = // unimplemented
+
+    return 1;
+}
+
+int Cpu8080::op_cma(void)
+{
+    /* Bit-by-bit complement A */
+    m_regA = ~m_regA;
 
     return 1;
 }
