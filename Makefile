@@ -1,9 +1,12 @@
 # test auto finding cpp files
 
-CPP = g++
-CC = gcc
+CPP = c++
+CC = cc
 
 CFLAGS = -g
+
+INCDIRS = -I/usr/local/include
+LIBDIRS = -L/usr/local/lib
 
 LIBS = -lSDL
 
@@ -14,13 +17,13 @@ OBJECTS = $(CPPSOURCES:.cpp=.o) $(CSOURCES:.c=.o)
 BIN = SpaceInvaders
 
 all: $(OBJECTS)
-	$(CPP) $(OBJECTS) -o $(BIN) $(LIBS)
+	$(CPP) $(OBJECTS) -o $(BIN) $(LIBDIRS) $(LIBS)
 
 .cpp.o:
-	$(CPP) $(CFLAGS) -c -o $@ $<
+	$(CPP) $(CFLAGS) -c -o $@ $< $(INCDIRS)
 
 .c.o:
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $< $(INCDIRS)
 
 clean:
 	rm -f $(OBJECTS)

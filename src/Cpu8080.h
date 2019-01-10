@@ -386,6 +386,7 @@ public:
     int op_jc(void);
     int op_jpo(void);
     int op_jm(void);
+    int op_pchl(void);
 
 //////////////////////////////////////////////////////////////
 //**************** Immediate Instructions ******************//
@@ -436,6 +437,7 @@ public:
     // technically these are carry bit instructions
     int op_xchg(void);
     int op_xthl(void);
+    int op_sphl(void);
     int op_stc(void);
     int op_cmc(void);
 
@@ -478,6 +480,7 @@ public:
     int op_rrc(void);
     int op_rlc(void);
     int op_rar(void);
+    int op_ral(void);
 
 //////////////////////////////////////////////////////////////
 //******* Register/Memory to Accumulator Instructions ******//

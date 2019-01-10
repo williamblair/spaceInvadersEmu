@@ -80,6 +80,7 @@ void Cpu8080::run_next_op(void)
         case 0x12:  num_increment = op_stax(); break; // STAX D
         case 0x14:  num_increment = op_inr();  break; // INR D
         case 0x15:  num_increment = op_dcr();  break; // DCR D
+        case 0x17:  num_increment = op_ral();  break; // RAL
         case 0x19:  num_increment = op_dad();  break; // DAD D
         case 0x13:  num_increment = op_inx();  break; // INX D
         case 0x16:  num_increment = op_mvi();  break; // MVI D, D8
@@ -106,11 +107,14 @@ void Cpu8080::run_next_op(void)
 
         case 0x31:  num_increment = op_lxi();  break; // LXI sp
         case 0x32:  num_increment = op_sta();  break; // STA adr
+        case 0x33:  num_increment = op_inx();  break; // INX SP 
         case 0x34:  num_increment = op_inr();  break; // INR M
         case 0x35:  num_increment = op_dcr();  break; // DCR M
         case 0x36:  num_increment = op_mvi();  break; // MVI M,D8
         case 0x37:  num_increment = op_stc();  break; // STC 
+        case 0x39:  num_increment = op_dad();  break; // DAD SP
         case 0x3A:  num_increment = op_lda();  break; // LDA adr
+        case 0x3B:  num_increment = op_dcx();  break; // DCX SP
         case 0x3D:  num_increment = op_dcr();  break; // DCR A
         case 0x3C:  num_increment = op_inr();  break; // INR A
         case 0x3E:  num_increment = op_mvi();  break; // MVI A,D8
@@ -321,6 +325,7 @@ void Cpu8080::run_next_op(void)
         case 0xE5:  num_increment = op_push(); break; // PUSH H
         case 0xE6:  num_increment = op_ani();  break; // ANI D8
         case 0xE8:  num_increment = op_rpe();  break; // RPE
+        case 0xE9:  num_increment = op_pchl(); break; // PCHL
         case 0xEA:  num_increment = op_jpe();  break; // JPE adr
         case 0xEB:  num_increment = op_xchg(); break; // XCHG
         case 0xEC:  num_increment = op_cpe();  break; // CPE adr
@@ -333,6 +338,7 @@ void Cpu8080::run_next_op(void)
         case 0xF5:  num_increment = op_push(); break; // PUSH PSW
         case 0xF6:  num_increment = op_ori();  break; // ORI D
         case 0xF8:  num_increment = op_rm();   break; // RM
+        case 0xF9:  num_increment = op_sphl(); break; // SPHL
         case 0xFA:  num_increment = op_jm();   break; // JM adr
         case 0xFB:  num_increment = op_ei();   break; // EI
         case 0xFC:  num_increment = op_cm();   break; // CM 
@@ -554,6 +560,18 @@ int Cpu8080::op_jm(void)
     }
 
     return 3;
+}
+
+int Cpu8080::op_pchl(void)
+{
+    /* Get the value from H and L */
+    uint16_t val = (m_regH << 8) | m_regL;
+
+    /* Store it in PC */
+    m_pc = val;
+
+    /* Don't adjust the program counter please */
+    return 0;
 }
 
 //////////////////////////////////////////////////////////////
@@ -1269,6 +1287,17 @@ int Cpu8080::op_xthl(void)
     return 1;
 }
 
+int Cpu8080::op_sphl(void)
+{
+    /* Get the value from H and L */
+    uint16_t val = (m_regH << 8) | m_regL;
+
+    /* Set the stack value */
+    m_sp = val;
+
+    return 1;
+}
+
 int Cpu8080::op_stc(void)
 {
     /* Set the carry bit to 1 */
@@ -1603,6 +1632,24 @@ int Cpu8080::op_rar(void)
     m_regA |= curCarry << 7;
 
     return 1;
+}
+
+int Cpu8080::op_ral(void)
+{
+    /* Save the current carry bit */
+    uint8_t curCarry = m_flagC & 1;
+
+    /* Carry bit = high order bit of accumulator */
+    m_flagC = (m_regA >> 7) & 1;
+
+    /* Left Shift the accumulator */
+    m_regA <<= 1;
+
+    /* LSB of A = prev carry */
+    m_regA |= curCarry & 1;
+
+    return 1;
+    
 }
 
 //////////////////////////////////////////////////////////////
