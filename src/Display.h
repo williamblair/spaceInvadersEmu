@@ -29,8 +29,11 @@ private:
 
     SDL_Surface *m_space_image; // the space invaders screen
 
-    const int m_width  = 224;
-    const int m_height = 256;
+    //const int m_width  = 224;
+    //const int m_height = 256;
+
+    const int m_width  = 256;
+    const int m_height = 224;
 
     SDL_Surface *m_screen; // SDL display
     SDL_Rect m_screen_rect;// = { 0, 0, m_width, m_height };

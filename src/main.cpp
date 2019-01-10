@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
     exit(0);
 #endif
 
-    display.init(224, 256, memory, ports);
+    display.init(256, 224, memory, ports);
     cpu.init(memory, ports);
 
     timer = SDL_GetTicks();

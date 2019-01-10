@@ -33,7 +33,7 @@ bool Display::init(const int w, const int h, uint8_t *memory, uint8_t *ports)
 
     SDL_Init(SDL_INIT_VIDEO);
 
-    m_screen = SDL_SetVideoMode(w, h, 32, SDL_HWSURFACE);
+    m_screen = SDL_SetVideoMode(m_width, m_height, 32, SDL_HWSURFACE);
 
     m_memory = memory;
 
