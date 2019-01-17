@@ -314,6 +314,7 @@ void Cpu8080::run_next_op(void)
         case 0xD6:  num_increment = op_sui();  break; // SUI D8
         case 0xD8:  num_increment = op_rc();   break; // RC
         case 0xDA:  num_increment = op_jc();   break; // JC adr
+        case 0xDB:  num_increment = op_in();   break; // IN D
         case 0xDC:  num_increment = op_cc();   break; // CC adr
         case 0xDE:  num_increment = op_sbi();  break; // SBI D8
 
@@ -1587,6 +1588,46 @@ int Cpu8080::op_out(void)
 
         default:
             printf("  Unhandled OUT Device: 0x%X\n", device);
+            exit(0);
+    }
+
+    return 2;
+}
+
+int Cpu8080::op_in(void)
+{
+    /* Which device? */
+    uint8_t device = m_memory[m_pc+1];
+
+    switch (device)
+    {
+        case 1:
+            printf("Reading from port 1:\n");
+            printf("  Credit: %d\n", m_ports[1] & 1);
+            printf("  2p start: %d\n", (m_ports[1]>>1) & 1);
+            printf("  1p start: %d\n", (m_ports[1]>>2) & 1);
+            printf("  Bit3: %d\n", (m_ports[1]>>3) & 1);
+            printf("  1p shot: %d\n", (m_ports[1]>>4) & 1);
+            printf("  1p left: %d\n", (m_ports[1]>>5) & 1);
+            printf("  1p right: %d\n", (m_ports[1]>>6) & 1);
+            //getchar();
+            //exit(0);
+            m_regA = m_ports[1];
+            break;
+        case 2:
+            printf("Reading from port 2:\n");
+            printf("  Ships val: %d\n", m_ports[2] & 3);
+            printf("  Tilt: %d\n", (m_ports[2]>>2) & 1);
+            printf("  Dip6: %d\n", (m_ports[2]>>3) & 1);
+            printf("  P2 shot: %d\n", (m_ports[2]>>4) & 1);
+            printf("  P2 left: %d\n", (m_ports[2]>>5) & 1);
+            printf("  P2 right: %d\n", (m_ports[2]>>6) & 1);
+            printf("  Dip7 coin: %d\n\n", (m_ports[2]>>7) & 1);
+            m_regA = m_ports[2];
+            //exit(0);
+            break;
+        default:
+            printf("IN: unhandled device: %d\n", device);
             exit(0);
     }
 

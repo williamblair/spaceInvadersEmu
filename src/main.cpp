@@ -35,6 +35,30 @@ int main(int argc, char *argv[])
     memcpy(&memory[ROM_F_START], ROM_F, ROM_F_SIZE);
     memcpy(&memory[ROM_E_START], ROM_E, ROM_E_SIZE);
 
+    /* Set some initial input values 
+     * Port 2
+     * bit 0 = DIP3 00 = 3 ships  10 = 5 ships
+     * bit 1 = DIP5 01 = 4 ships  11 = 6 ships
+     * bit 2 = Tilt
+     * bit 3 = DIP6 0 = extra ship at 1500, 1 = extra ship at 1000
+     * bit 4 = P2 shot (1 if pressed)
+     * bit 5 = P2 left (1 if pressed)
+     * bit 6 = P2 right (1 if pressed)
+     * bit 7 = DIP7 Coin info displayed in demo screen 0=ON
+     */
+    ports[2] = 0;
+
+    /* Port 1
+     *  bit 0 = CREDIT (1 if deposit)
+     *  bit 1 = 2P start (1 if pressed)
+     *  bit 2 = 1P start (1 if pressed)
+     *  bit 3 = Always 1
+     *  bit 4 = 1P shot (1 if pressed)
+     *  bit 5 = 1P left (1 if pressed)
+     *  bit 6 = 1P right (1 if pressed)
+     *  bit 7 = Not connected
+     */
+    ports[1] = 0b00001000;
 
 #if 0
     for (i=0; i < 0x2000; ++i) {
